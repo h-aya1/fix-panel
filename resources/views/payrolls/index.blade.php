@@ -3,13 +3,11 @@
 @section('title', __('payroll.processing.title_main_suffix'))
 
 @php
-    // Initial PHP data setup
-    $currentPayrollMonth = "2025년 3월";
-    $totalPayrollEmployees = 25;
+    // Use data from controller instead of hardcoded values
     $image_frame_label = "Frame 3";
     $image_page_title = $currentPayrollMonth . " " . __('payroll.processing.title_main_suffix');
     $image_total_employees_text = __('payroll.processing.total_employees_display_short', ['count' => $totalPayrollEmployees]);
-    $image_sms_sent_employees_text = __('payroll.processing.sms_sent_employees_display', ['count' => $totalPayrollEmployees]);
+    $image_sms_sent_employees_text = __('payroll.processing.sms_sent_employees_display', ['count' => $smsSentCount ?? $totalPayrollEmployees]);
     $image_excel_upload_prompt = __('payroll.processing.excel_upload_prompt_short');
     $image_filter_site_button = "SETEC";
     $image_filter_month_button = $currentPayrollMonth;
@@ -17,35 +15,8 @@
     $image_send_sms_button_text = __('payroll.actions.send_sms_selected_short');
     $image_search_label = __('app.search_short');
 
-    $imChaeJeongSmsDetails = [
-        'company_name' => __('payroll.offcanvas_sms.sms_company_name'),
-        'intro_line1' => __('payroll.offcanvas_sms.sms_intro_line1'),
-        'intro_line2' => __('payroll.offcanvas_sms.sms_intro_line2'),
-        'link_url' => 'www.example.com/payslip/jaden221',
-        'link_text' => __('payroll.offcanvas_sms.sms_link_text'),
-        'payment_date' => '2025년 04월 10일',
-        'statement_title' => __('payroll.offcanvas_sms.sms_statement_title_prefix').' '. __('payroll.offcanvas_sms.sms_statement_title_suffix'),
-        'earnings' => [['label' => __('payroll.offcanvas_sms.sms_base_salary_label'), 'value' => 3212000], ['label' => __('payroll.offcanvas_sms.sms_seniority_allowance_label'), 'value' => 400000], ['label' => __('payroll.offcanvas_sms.sms_annual_leave_allowance_label'), 'value' => 154000]],
-        'total_gross_pay_label' => __('payroll.offcanvas_sms.sms_total_gross_pay_label'), 'total_gross_pay_value' => 3766000,
-        'deductions' => [['label' => __('payroll.offcanvas_sms.sms_health_insurance_label'), 'value' => 133500], ['label' => __('payroll.offcanvas_sms.sms_long_term_care_insurance_label'), 'value' => 17280], ['label' => __('payroll.offcanvas_sms.sms_income_tax_label'), 'value' => 178920], ['label' => __('payroll.offcanvas_sms.sms_local_income_tax_label'), 'value' => 17890]],
-        'total_deductions_label' => __('payroll.offcanvas_sms.sms_total_deductions_label'), 'total_deductions_value' => 347590,
-    ];
-
-    $payrollEntriesData = [];
-    $tempPayrollEntries = [
-        ['uid' => 'emp_1', 'id' => '586', 'name' => '임채정', 'department' => '일신방직', 'position' => '미화', 'phone_number' => '010-5555-2222', 'work_days' => 31, 'base_salary_str' => '2,299,000', 'allowances_str' => '358,190', 'gross_pay_str' => '2,657,190', 'deductions_str' => '358,190', 'net_pay_str' => '2,366,240', 'remarks' => '국민연금 조기수령, 연금 공제 x', 'sms_sent_status' => 'sent', 'is_checked' => true, 'numeric_base_salary' => 2299000, 'numeric_total_allowances' => 358190, 'numeric_total_deductions' => 358190, 'numeric_net_pay' => 2366240, 'allowance_items' => [['label_key' => 'payroll.offcanvas_details.allowances.seniority', 'label_translation' => __('payroll.offcanvas_details.allowances.seniority'), 'value' => 2299000]], 'deduction_items' => [['label_key' => 'payroll.offcanvas_details.deductions.health_insurance', 'label_translation' => __('payroll.offcanvas_details.deductions.health_insurance'), 'value' => 2299000]], 'sms_details' => $imChaeJeongSmsDetails ],
-        [ 'uid' => 'emp_2', 'id' => '587', 'name' => '김영희', 'department' => '경리부', 'position' => '주임', 'phone_number' => '010-1234-5678', 'work_days' => 30, 'base_salary_str' => '2,500,000', 'allowances_str' => '300,000', 'gross_pay_str' => '2,800,000', 'deductions_str' => '300,000', 'net_pay_str' => '2,500,000', 'remarks' => '', 'sms_sent_status' => 'pending', 'is_checked' => true, 'numeric_base_salary' => 2500000, 'numeric_total_allowances' => 300000, 'numeric_total_deductions' => 300000, 'numeric_net_pay' => 2500000, 'allowance_items' => [], 'deduction_items' => [], 'sms_details' => null ],
-        [ 'uid' => 'emp_3', 'id' => '588', 'name' => '박철민', 'department' => '일신방직', 'position' => '기사', 'phone_number' => '010-8765-0000', 'work_days' => 28, 'base_salary_str' => '2,100,000', 'allowances_str' => '150,000', 'gross_pay_str' => '2,250,000', 'deductions_str' => '200,000', 'net_pay_str' => '2,050,000', 'remarks' => '부분 공제', 'sms_sent_status' => 'failed', 'is_checked' => true, 'numeric_base_salary' => 2100000, 'numeric_total_allowances' => 150000, 'numeric_total_deductions' => 200000, 'numeric_net_pay' => 2050000, 'allowance_items' => [], 'deduction_items' => [], 'sms_details' => null ],
-        [ 'uid' => 'emp_4', 'id' => '589', 'name' => '이수진', 'department' => '인사팀', 'position' => '대리', 'phone_number' => '010-3322-1100', 'work_days' => 31, 'base_salary_str' => '3,000,000', 'allowances_str' => '400,000', 'gross_pay_str' => '3,400,000', 'deductions_str' => '450,000', 'net_pay_str' => '2,950,000', 'remarks' => '만근', 'sms_sent_status' => 'sent', 'is_checked' => true, 'numeric_base_salary' => 3000000, 'numeric_total_allowances' => 400000, 'numeric_total_deductions' => 450000, 'numeric_net_pay' => 2950000, 'allowance_items' => [], 'deduction_items' => [], 'sms_details' => null ],
-        [ 'uid' => 'emp_5', 'id' => '590', 'name' => '최현우', 'department' => '일신방직', 'position' => '미화', 'phone_number' => '010-7777-8888', 'work_days' => 29, 'base_salary_str' => '2,200,000', 'allowances_str' => '250,000', 'gross_pay_str' => '2,450,000', 'deductions_str' => '280,000', 'net_pay_str' => '2,170,000', 'remarks' => '', 'sms_sent_status' => 'pending', 'is_checked' => true, 'numeric_base_salary' => 2200000, 'numeric_total_allowances' => 250000, 'numeric_total_deductions' => 280000, 'numeric_net_pay' => 2170000, 'allowance_items' => [], 'deduction_items' => [], 'sms_details' => null ],
-    ];
-    for ($i = count($tempPayrollEntries); $i < $totalPayrollEmployees; $i++) {
-        $uid = 'temp_emp_' . ($i + 1);
-        $tempPayrollEntries[] = ['uid' => $uid, 'id' => 'TEMP'.($i+1), 'name' => '사원 '.($i+1), 'department' => '임시부서', 'position' => '직원', 'phone_number' => '010-0000-0000', 'work_days' => 30, 'base_salary_str' => '2,000,000', 'allowances_str' => '200,000', 'gross_pay_str' => '2,200,000', 'deductions_str' => '150,000', 'net_pay_str' => '2,050,000', 'remarks' => '-', 'sms_sent_status' => 'pending', 'is_checked' => true, 'numeric_base_salary' => 2000000, 'numeric_total_allowances' => 200000, 'numeric_total_deductions' => 150000, 'numeric_net_pay' => 2050000, 'allowance_items' => [], 'deduction_items' => [], 'sms_details' => null ];
-    }
-    $payrollEntriesData = $tempPayrollEntries;
+    // All payroll data is now passed from the controller
     $isSelectAllChecked = true;
-    $attendanceLeaveDataExample = [['type' => __('offcanvas.attendance.table.header.type'), 'date' => '2025.03.25 - 2025.03.27', 'period' => '3일', 'paid' => 'X', 'memo' => '가족 행사']];
     $jsonEncodedAttendanceData = htmlspecialchars(json_encode($attendanceLeaveDataExample), ENT_QUOTES, 'UTF-8');
 @endphp
 
@@ -469,8 +440,8 @@
             source: dataAdapter,
             theme: 'bootstrap', // Using Bootstrap theme
             pageable: true,
-            pagesize: initialPayrollData.length > 50 ? 50 : (initialPayrollData.length > 20 ? 20 : (initialPayrollData.length > 0 ? 10 : 5)),
-            pagesizeoptions: ['10', '20', '50', '100', initialPayrollData.length > 0 ? initialPayrollData.length.toString() : '10'],
+            pagesize: initialPayrollData.length > 50 ? 50 : (initialPayrollData.length > 20 ? 20 : (initialPayrollData.length > 0 ? Math.max(initialPayrollData.length, 10) : 10)),
+            pagesizeoptions: ['10', '20', '50', '100'],
             sortable: true,
             altrows: true, // Alternate row styling
             enabletooltips: true,
@@ -593,6 +564,70 @@
                 $button.addClass('active');
             }
             grid.jqxGrid('applyfilters'); // Apply all accumulated filters
+        });
+
+        // Function to refresh the payroll grid data
+        function refreshPayrollGrid() {
+            $.ajax({
+                url: '{{ route("payrolls.index") }}',
+                type: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    // Update the grid data source
+                    const source = {
+                        datatype: "json",
+                        datafields: [
+                            { name: 'uid' }, { name: 'id' }, { name: 'name' }, { name: 'department' }, { name: 'position' },
+                            { name: 'work_days' }, { name: 'base_salary_str' }, { name: 'allowances_str' }, { name: 'gross_pay_str' },
+                            { name: 'deductions_str' }, { name: 'net_pay_str' }, { name: 'remarks' }, { name: 'sms_sent_status' },
+                            { name: 'is_checked' }, { name: 'numeric_base_salary' }, { name: 'numeric_total_allowances' },
+                            { name: 'numeric_total_deductions' }, { name: 'numeric_net_pay' }, { name: 'allowance_items' },
+                            { name: 'deduction_items' }, { name: 'sms_details' }
+                        ],
+                        localdata: response
+                    };
+                    const dataAdapter = new $.jqx.dataAdapter(source);
+                    $('#payrollJqxGrid').jqxGrid({ source: dataAdapter });
+                    
+                    // Update empty state
+                    setTimeout(toggleEmptyState, 200);
+                    
+                    // Update statistics if elements exist
+                    if (response.length > 0) {
+                        const smsSentCount = response.filter(item => item.sms_sent_status === 'sent').length;
+                        $('.header-sub-info span:nth-child(1)').text('{{ __("payroll.processing.total_employees_display_short", ["count" => ""]) }}'.replace(':count', response.length));
+                        $('.header-sub-info span:nth-child(2)').text('{{ __("payroll.processing.sms_sent_employees_display", ["count" => ""]) }}'.replace(':count', smsSentCount));
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Failed to refresh payroll data:', xhr);
+                }
+            });
+        }
+
+        // Function to toggle empty state visibility
+        function toggleEmptyState() {
+            const grid = $("#payrollJqxGrid");
+            const emptyState = $("#emptyPayrollState");
+            const rowsCount = grid.jqxGrid('getdatainformation').rowscount;
+            
+            if (rowsCount === 0) {
+                grid.hide();
+                emptyState.show();
+            } else {
+                grid.show();
+                emptyState.hide();
+            }
+        }
+
+        // Initial empty state check
+        toggleEmptyState();
+
+        // Update empty state when data changes
+        $('#payrollJqxGrid').on('bindingcomplete', function() {
+            setTimeout(toggleEmptyState, 100); // Small delay to ensure grid is fully rendered
         });
 
         // Excel/CSV Upload and Preview Logic
@@ -1006,8 +1041,8 @@
                             showConfirmButton: false
                         });
                         bootstrap.Modal.getInstance($('#payrollModal')[0])?.hide();
-                        // Reload the grid or page
-                        location.reload();
+                        // Refresh the grid data instead of full page reload
+                        refreshPayrollGrid();
                     }
                 },
                 error: function(xhr) {
@@ -1124,8 +1159,15 @@
                             <option value="position">{{ __('payroll.offcanvas_details.allowances.position') }}</option>
                             <option value="job">{{ __('payroll.offcanvas_details.allowances.job') }}</option>
                             <option value="overtime">{{ __('payroll.offcanvas_details.allowances.overtime') }}</option>
+                            <option value="holiday_special_work">{{ __('payroll.offcanvas_details.allowances.holiday_special_work') }}</option>
+                            <option value="night_shift">{{ __('payroll.offcanvas_details.allowances.night_shift') }}</option>
+                            <option value="bonus">{{ __('payroll.offcanvas_details.allowances.bonus') }}</option>
+                            <option value="adjustment">{{ __('payroll.offcanvas_details.allowances.adjustment') }}</option>
                             <option value="transportation">{{ __('payroll.offcanvas_details.allowances.transportation') }}</option>
                             <option value="meal">{{ __('payroll.offcanvas_details.allowances.meal') }}</option>
+                            <option value="labor_day">{{ __('payroll.offcanvas_details.allowances.labor_day') }}</option>
+                            <option value="annual_leave">{{ __('payroll.offcanvas_details.allowances.annual_leave') }}</option>
+                            <option value="welfare">{{ __('payroll.offcanvas_details.allowances.welfare') }}</option>
                             <option value="other">{{ __('payroll.offcanvas_details.allowances.other') }}</option>
                         </select>
                     </div>
@@ -1219,6 +1261,19 @@
     </div>
 
     <div id="payrollJqxGrid" class="mt-3"></div>
+
+    @if(empty($payrollEntriesData))
+    <div id="emptyPayrollState" class="text-center py-5">
+        <div class="mb-4">
+            <i class="bx bx-receipt" style="font-size: 4rem; color: #6c757d;"></i>
+        </div>
+        <h5 class="text-muted mb-3">{{ __('payroll.no_payroll_records') }}</h5>
+        <p class="text-muted mb-4">{{ __('payroll.no_payroll_records_description') }}</p>
+        <button class="btn btn-primary" onclick="openCreatePayrollModal()">
+            <i class="bx bx-plus me-2"></i>{{ __('payroll.create_first_payroll') }}
+        </button>
+    </div>
+    @endif
 
 </div>
 

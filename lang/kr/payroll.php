@@ -157,4 +157,9 @@ return [
     'remarks' => '비고',
     'created_successfully' => '급여 정보가 성공적으로 생성되었습니다!',
     'creation_failed' => '급여 정보 생성에 실패했습니다',
+    
+    // Empty state
+    'no_payroll_records' => '급여 기록이 없습니다',
+    'no_payroll_records_description' => '직원의 첫 번째 급여 기록을 생성해보세요.',
+    'create_first_payroll' => '첫 급여 생성하기',
 ];

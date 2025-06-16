@@ -164,4 +164,9 @@ return [
     'remarks' => 'Remarks',
     'created_successfully' => 'Payroll record created successfully!',
     'creation_failed' => 'Failed to create payroll record',
+    
+    // Empty state
+    'no_payroll_records' => 'No Payroll Records Found',
+    'no_payroll_records_description' => 'Start by creating your first payroll record for an employee.',
+    'create_first_payroll' => 'Create First Payroll',
 ];

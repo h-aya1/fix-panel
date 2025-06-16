@@ -19,12 +19,93 @@ class PayrollController extends Controller
             return response()->json($payrolls);
         }
         
-        // Get current payroll data or use default
-        $payrolls = Payroll::all();
-        $currentPayrollMonth = "2025년 3월";
-        $totalPayrollEmployees = $payrolls->count() > 0 ? $payrolls->count() : 25;
+        // Get current payroll data from database
+        $payrolls = Payroll::orderBy('created_at', 'desc')->get();
         
-        return view('payrolls.index', compact('payrolls', 'currentPayrollMonth', 'totalPayrollEmployees'));
+        // Format payroll data for the view
+        $payrollEntriesData = [];
+        foreach ($payrolls as $payroll) {
+            $allowanceItems = is_string($payroll->allowance_items) 
+                ? json_decode($payroll->allowance_items, true) ?: []
+                : ($payroll->allowance_items ?: []);
+                
+            $deductionItems = is_string($payroll->deduction_items)
+                ? json_decode($payroll->deduction_items, true) ?: []
+                : ($payroll->deduction_items ?: []);
+
+            $payrollEntriesData[] = [
+                'uid' => $payroll->uid ?: 'payroll_' . $payroll->id,
+                'id' => $payroll->employee_id,
+                'name' => $payroll->name,
+                'department' => $payroll->department,
+                'position' => $payroll->position,
+                'phone_number' => $payroll->phone_number,
+                'work_days' => $payroll->work_days,
+                'base_salary_str' => number_format($payroll->base_salary ?: 0),
+                'allowances_str' => number_format($payroll->allowances ?: 0),
+                'gross_pay_str' => number_format($payroll->gross_pay ?: 0),
+                'deductions_str' => number_format($payroll->deductions ?: 0),
+                'net_pay_str' => number_format($payroll->net_pay ?: 0),
+                'remarks' => $payroll->remarks ?: '',
+                'sms_sent_status' => $payroll->sms_sent_status ?: 'pending',
+                'is_checked' => $payroll->is_checked ?? true,
+                'numeric_base_salary' => $payroll->base_salary ?: 0,
+                'numeric_total_allowances' => $payroll->allowances ?: 0,
+                'numeric_total_deductions' => $payroll->deductions ?: 0,
+                'numeric_net_pay' => $payroll->net_pay ?: 0,
+                'allowance_items' => $allowanceItems,
+                'deduction_items' => $deductionItems,
+                'sms_details' => null // Will be populated when needed
+            ];
+        }
+        
+        // If no payroll data exists, provide empty array
+        if (empty($payrollEntriesData)) {
+            $payrollEntriesData = [];
+        }
+        
+        // Current month and statistics
+        $currentPayrollMonth = now()->format('Y년 n월');
+        $totalPayrollEmployees = $payrolls->count();
+        $smsSentCount = $payrolls->where('sms_sent_status', 'sent')->count();
+        
+        // Default SMS details structure (for first employee if exists)
+        $imChaeJeongSmsDetails = [
+            'company_name' => __('payroll.offcanvas_sms.sms_company_name'),
+            'intro_line1' => __('payroll.offcanvas_sms.sms_intro_line1'),
+            'intro_line2' => __('payroll.offcanvas_sms.sms_intro_line2'),
+            'link_url' => 'www.example.com/payslip/sample',
+            'link_text' => __('payroll.offcanvas_sms.sms_link_text'),
+            'payment_date' => now()->format('Y년 m월 d일'),
+            'statement_title' => __('payroll.offcanvas_sms.sms_statement_title_prefix').' '. __('payroll.offcanvas_sms.sms_statement_title_suffix'),
+            'earnings' => [],
+            'total_gross_pay_label' => __('payroll.offcanvas_sms.sms_total_gross_pay_label'),
+            'total_gross_pay_value' => 0,
+            'deductions' => [],
+            'total_deductions_label' => __('payroll.offcanvas_sms.sms_total_deductions_label'),
+            'total_deductions_value' => 0,
+        ];
+        
+        // Attendance/leave example data
+        $attendanceLeaveDataExample = [
+            [
+                'type' => __('offcanvas.attendance.table.header.type'),
+                'date' => now()->subDays(5)->format('Y.m.d') . ' - ' . now()->subDays(3)->format('Y.m.d'),
+                'period' => '3일',
+                'paid' => 'X',
+                'memo' => '가족 행사'
+            ]
+        ];
+        
+        return view('payrolls.index', compact(
+            'payrolls', 
+            'payrollEntriesData',
+            'currentPayrollMonth', 
+            'totalPayrollEmployees', 
+            'smsSentCount',
+            'imChaeJeongSmsDetails',
+            'attendanceLeaveDataExample'
+        ));
     }
 
     /**
