@@ -13,6 +13,8 @@ return [
     'delete' => '삭제',
     'save' => '저장',
     'cancel' => '취소',
+    'save_button' => '저장',
+    'cancel_button' => '취소',
     'confirm' => '확인',
     'yes' => '예',
     'no' => '아니오',

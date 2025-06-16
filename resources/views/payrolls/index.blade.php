@@ -409,73 +409,46 @@
     }
 
     $(document).ready(function () {
-        // Initialize with database data or fallback to static data
-        loadPayrollData();
+        const initialPayrollData = @json($payrollEntriesData);
+        // If join_date_str exists, convert it to Date objects for jqxGrid date column type
+        initialPayrollData.forEach(emp => {
+            if (emp.join_date_str) { // Assuming you might add this field later for CSV import
+                emp.join_date = new Date(emp.join_date_str);
+            }
+        });
 
-        function loadPayrollData() {
-            $.ajax({
-                url: '{{ route("payrolls.index") }}',
-                type: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                success: function(data) {
-                    if (data && data.length > 0) {
-                        initializeGrid(data);
-                    } else {
-                        // Fallback to static data if no database records
-                        const initialPayrollData = @json($payrollEntriesData);
-                        initializeGrid(initialPayrollData);
-                    }
-                },
-                error: function() {
-                    // Fallback to static data on error
-                    const initialPayrollData = @json($payrollEntriesData);
-                    initializeGrid(initialPayrollData);
-                }
-            });
-        }
-
-        function initializeGrid(payrollData) {
-            // If join_date_str exists, convert it to Date objects for jqxGrid date column type
-            payrollData.forEach(emp => {
-                if (emp.join_date_str) { // Assuming you might add this field later for CSV import
-                    emp.join_date = new Date(emp.join_date_str);
-                }
-            });
-
-            var source = {
-                localdata: payrollData,
-                datatype: "array",
-                id: 'uid', // This field must exist in your data and be unique
-                datafields: [
-                    { name: 'uid', type: 'string' },
-                    { name: 'is_checked', type: 'bool'}, // For initial checkbox state if bound
-                    { name: 'id', type: 'string' },
-                    { name: 'department', type: 'string' },
-                    { name: 'position', type: 'string' },
-                    { name: 'name', type: 'string' },
-                    { name: 'work_days', type: 'number' },
-                    { name: 'base_salary_str', type: 'string' }, // For display
-                    { name: 'allowances_str', type: 'string' }, // For display
-                    { name: 'gross_pay_str', type: 'string' },   // For display
-                    { name: 'deductions_str', type: 'string' }, // For display
-                    { name: 'net_pay_str', type: 'string' },     // For display
-                    { name: 'remarks', type: 'string' },
-                    { name: 'sms_sent_status', type: 'string' },
-                    { name: 'phone_number', type: 'string'}, // For SMS offcanvas
-                    // Numeric fields for calculations or offcanvas if not parsing strings there
-                    { name: 'numeric_base_salary', type: 'number' },
-                    { name: 'numeric_total_allowances', type: 'number' },
-                    { name: 'numeric_total_deductions', type: 'number' },
-                    { name: 'numeric_net_pay', type: 'number' },
-                    // Complex data for offcanvases
-                    { name: 'allowance_items', type: 'array' },
-                    { name: 'deduction_items', type: 'array' },
-                    { name: 'sms_details', type: 'object' }
-                ]
-            };
-            var dataAdapter = new $.jqx.dataAdapter(source);
+        var source = {
+            localdata: initialPayrollData,
+            datatype: "array",
+            id: 'uid', // This field must exist in your data and be unique
+            datafields: [
+                { name: 'uid', type: 'string' },
+                { name: 'is_checked', type: 'bool'}, // For initial checkbox state if bound
+                { name: 'id', type: 'string' },
+                { name: 'department', type: 'string' },
+                { name: 'position', type: 'string' },
+                { name: 'name', type: 'string' },
+                { name: 'work_days', type: 'number' },
+                { name: 'base_salary_str', type: 'string' }, // For display
+                { name: 'allowances_str', type: 'string' }, // For display
+                { name: 'gross_pay_str', type: 'string' },   // For display
+                { name: 'deductions_str', type: 'string' }, // For display
+                { name: 'net_pay_str', type: 'string' },     // For display
+                { name: 'remarks', type: 'string' },
+                { name: 'sms_sent_status', type: 'string' },
+                { name: 'phone_number', type: 'string'}, // For SMS offcanvas
+                // Numeric fields for calculations or offcanvas if not parsing strings there
+                { name: 'numeric_base_salary', type: 'number' },
+                { name: 'numeric_total_allowances', type: 'number' },
+                { name: 'numeric_total_deductions', type: 'number' },
+                { name: 'numeric_net_pay', type: 'number' },
+                // Complex data for offcanvases
+                { name: 'allowance_items', type: 'array' },
+                { name: 'deduction_items', type: 'array' },
+                { name: 'sms_details', type: 'object' }
+            ]
+        };
+        var dataAdapter = new $.jqx.dataAdapter(source);
 
         // Cell Renderers
         var cellsrenderer_text_center = function (row, columnfield, value) { return '<div style="text-align: center; margin: 5px 3px; white-space: normal; word-wrap: break-word;">' + (value || '') + '</div>'; };
@@ -496,8 +469,8 @@
             source: dataAdapter,
             theme: 'bootstrap', // Using Bootstrap theme
             pageable: true,
-            pagesize: payrollData.length > 50 ? 50 : (payrollData.length > 20 ? 20 : (payrollData.length > 0 ? 10 : 5)),
-            pagesizeoptions: ['10', '20', '50', '100', payrollData.length > 0 ? payrollData.length.toString() : '10'],
+            pagesize: initialPayrollData.length > 50 ? 50 : (initialPayrollData.length > 20 ? 20 : (initialPayrollData.length > 0 ? 10 : 5)),
+            pagesizeoptions: ['10', '20', '50', '100', initialPayrollData.length > 0 ? initialPayrollData.length.toString() : '10'],
             sortable: true,
             altrows: true, // Alternate row styling
             enabletooltips: true,
@@ -713,23 +686,268 @@
 
         // Offcanvas Form Submissions
         $('#attendanceLeaveForm').on('submit', function(e) { e.preventDefault(); alert('{{ __("offcanvas.attendance.submit_feedback") }}'); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasAttendanceLeave'))?.hide(); });
-        $('#payrollDetailsForm').on('submit', function(e) { 
-            e.preventDefault(); 
-            // Get current payroll data from the form
-            const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasPayrollDetails'));
-            const currentPayrollId = $('#payrollDetailsForm').data('payroll-id');
-            
-            if (currentPayrollId) {
-                updatePayrollFromForm(currentPayrollId);
+        $('#payrollDetailsForm').on('submit', function(e) { e.preventDefault(); alert('Modify logic for payroll details to update grid not implemented.'); bootstrap.Offcanvas.getInstance(document.getElementById('offcanvasPayrollDetails'))?.hide(); });
+
+        // SMS Preview Offcanvas Logic
+        const offcanvasSmsPreviewInstance = new bootstrap.Offcanvas(document.getElementById('offcanvasSmsPreview'));
+        $('.btn-send-sms-custom').on('click', function() {
+            var selectedRowsData = [];
+            var selectedIndexes = $('#payrollJqxGrid').jqxGrid('getselectedrowindexes');
+            selectedIndexes.forEach(index => {
+                // Ensure the row data fetched includes the sms_details
+                var rowData = $('#payrollJqxGrid').jqxGrid('getrowdata', index);
+                if (rowData) { // Check if rowData is not undefined
+                    selectedRowsData.push(rowData);
+                }
+            });
+
+            if (selectedRowsData.length === 0) {
+                alert("{{ __('payroll.actions.select_employee_for_sms') }}");
+                return;
             }
-            offcanvas?.hide(); 
+            populateSmsEmployeeList(selectedRowsData);
+            $('#smsSenderNumberValue').text('070-5555-3333');
+            $('#smsRemainingPointsValue').text(formatNumber(40080));
+            offcanvasSmsPreviewInstance.show();
         });
 
-        // Modal Form Handlers
+        let currentSmsPreviewList = [];
+        function populateSmsEmployeeList(selectedEmployees) {
+            currentSmsPreviewList = selectedEmployees;
+            const listContainer = $('#employeeSmsListTableBody');
+            listContainer.empty();
+            $('#smsSelectedEmployeesCount').text("{{ __('payroll.offcanvas_sms.selected_employees_count') }}".replace(':count', selectedEmployees.length));
+
+            if (selectedEmployees.length === 0) {
+                listContainer.append('<tr><td colspan="4" class="text-center text-muted small">No employees selected.</td></tr>');
+                updateSmsPreviewDisplay(null); // Pass null to clear preview
+                return;
+            }
+            selectedEmployees.forEach((emp, index) => {
+                const row = $(`<tr data-row-uid="${emp.uid}"><td>${emp.id}</td><td>${emp.department}</td><td>${emp.name}</td><td>${emp.phone_number || '-'}</td></tr>`);
+                if (index === 0) {
+                    row.addClass('active-sms-employee');
+                    updateSmsPreviewDisplay(emp); // Initial preview for the first selected
+                }
+                listContainer.append(row);
+            });
+        }
+
+        $('#employeeSmsListTableBody').on('click', 'tr', function() {
+            const rowUID = $(this).data('row-uid');
+            if (!rowUID) return;
+            const employeeData = currentSmsPreviewList.find(emp => emp.uid === rowUID);
+            $('#employeeSmsListTableBody tr').removeClass('active-sms-employee');
+            $(this).addClass('active-sms-employee');
+            updateSmsPreviewDisplay(employeeData);
+        });
+
+        function updateSmsPreviewDisplay(employeeData) {
+            const contactNameEl = $('#smsPreviewContactName');
+            const messageContentEl = $('#smsPreviewMessageContent');
+            const templateTextareaEl = $('#smsMessageTemplateTextarea');
+
+            messageContentEl.empty(); // Clear previous messages
+
+            if (!employeeData || !employeeData.sms_details) {
+                contactNameEl.text('N/A');
+                messageContentEl.html('<div class="d-flex justify-content-center align-items-center h-100"><p class="text-muted small">Select an employee to see SMS details.</p></div>');
+                templateTextareaEl.val('');
+                return;
+            }
+
+            const sms = employeeData.sms_details;
+            contactNameEl.text(employeeData.name); // Set contact name at the top of phone preview
+
+            // Timestamp for the message group
+            messageContentEl.append(`<p class="sms-timestamp">{{ __('payroll.offcanvas_sms.sms_timestamp_today') }} ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}</p>`);
+
+            // Main Message Bubble
+            let bubbleHTML = `<div class="sms-bubble-wrapper received"><div class="sms-bubble received">`; // Assuming payroll messages are "received" by employee
+            bubbleHTML += `<strong>[${sms.company_name || 'Your Company'}]</strong><br>`;
+            bubbleHTML += `${sms.intro_line1 || ''}<br>`;
+            bubbleHTML += `${sms.intro_line2 || ''}<br>`;
+            bubbleHTML += `<a href="${sms.link_url || '#'}" target="_blank">${sms.link_text || 'View Statement'}</a>`;
+
+            // Payroll Info Block within the same bubble
+            bubbleHTML += `<div class="payroll-info-block">`;
+            bubbleHTML += `<div class="sms-item"><span class="sms-item-label">{{ __('payroll.offcanvas_sms.sms_payment_date_label') }}:</span> <span class="sms-item-value">${sms.payment_date || 'N/A'}</span></div>`;
+            bubbleHTML += `<div class="sms-item"><span class="sms-item-label">{{ __('payroll.offcanvas_sms.sms_emp_code_label') }}:</span> <span class="sms-item-value">${employeeData.id || 'N/A'}</span></div>`;
+            bubbleHTML += `<div class="sms-item"><span class="sms-item-label">{{ __('payroll.offcanvas_sms.sms_emp_name_label') }}:</span> <span class="sms-item-value">${employeeData.name || 'N/A'} quý vị</span></div>`;
+            bubbleHTML += `<br><strong>${sms.statement_title || 'Payroll Details'}</strong><br>`;
+
+            if (sms.earnings && Array.isArray(sms.earnings) && sms.earnings.length > 0) {
+                sms.earnings.forEach(e => {
+                    bubbleHTML += `<div class="sms-item"><span class="sms-item-label">${e.label || 'Earning'}:</span> <span class="sms-item-value">${formatNumber(e.value)}</span></div>`;
+                });
+            }
+            bubbleHTML += `<div class="sms-total"><span class="sms-item-label">${sms.total_gross_pay_label || 'Total Gross'}:</span> <span class="sms-item-value">${formatNumber(sms.total_gross_pay_value)}</span></div>`;
+
+            if (sms.deductions && Array.isArray(sms.deductions) && sms.deductions.length > 0) {
+                bubbleHTML += `<br>`; // Space before deductions
+                sms.deductions.forEach(d => {
+                    bubbleHTML += `<div class="sms-item"><span class="sms-item-label">${d.label || 'Deduction'}:</span> <span class="sms-item-value">${formatNumber(d.value)}</span></div>`;
+                });
+            }
+            bubbleHTML += `<div class="sms-total"><span class="sms-item-label">${sms.total_deductions_label || 'Total Deductions'}:</span> <span class="sms-item-value">${formatNumber(sms.total_deductions_value)}</span></div>`;
+            bubbleHTML += `</div>`; // Close payroll-info-block
+            bubbleHTML += `</div></div>`; // Close sms-bubble and sms-bubble-wrapper
+
+            messageContentEl.append(bubbleHTML);
+
+            // Populate Textarea (Simplified for example)
+            let templateText = `[${sms.company_name || 'Your Company'}] ${sms.intro_line1 || ''}\n`;
+            templateText += `Link: ${sms.link_url || '#'}\n\n`;
+            templateText += `Dear ${employeeData.name || 'Employee'},\nYour payslip for ${currentPayrollMonthJS} is ready. Gross: ${formatNumber(sms.total_gross_pay_value)}, Deductions: ${formatNumber(sms.total_deductions_value)}.`;
+            templateTextareaEl.val(templateText);
+        }
+
+        $('#smsEmployeeSearchInput').on('keyup', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            $('#employeeSmsListTableBody tr').each(function() {
+                $(this).toggle($(this).text().toLowerCase().includes(searchTerm));
+            });
+        });
+
+        $('#smsPreviewForm').on('submit', function(e) {
+            e.preventDefault();
+            const activeEmployeeRow = $('#employeeSmsListTableBody tr.active-sms-employee');
+            if (activeEmployeeRow.length === 0) {
+                alert("Please select an employee from the list.");
+                return;
+            }
+            // Actual SMS sending logic would go here
+            alert('SMS sending functionality not implemented in this example.');
+        });
+
+        // Global Functions for Modal Operations
+        window.openCreatePayrollModal = function() {
+            const modal = new bootstrap.Modal($('#payrollModal')[0]);
+            const form = $('#payrollForm');
+            
+            // Reset form
+            form[0].reset();
+            form.removeData('edit-mode').removeData('payroll-id');
+            $('#payrollModalTitle').text('{{ __("payroll.create_new") }}');
+            $('#savePayrollBtn').text('{{ __("app.create") }}');
+            
+            // Reset employee selection
+            $('#modalEmployeeSelect').val('');
+            clearEmployeeFields();
+            
+            // Reset allowance and deduction containers
+            resetAllowanceDeductionContainers();
+            calculateTotals();
+            updateRemoveButtonsVisibility();
+            
+            modal.show();
+        };
+
+        window.openImportModal = function() {
+            const modal = new bootstrap.Modal($('#importModal')[0]);
+            $('#importFile').val('');
+            $('#importPreview').addClass('d-none');
+            modal.show();
+        };
+
+        // Helper Functions
+        function clearEmployeeFields() {
+            $('#modalEmployeeId, #modalEmployeeName, #modalDepartment, #modalPosition, #modalPhoneNumber').val('');
+        }
+
+        function resetAllowanceDeductionContainers() {
+            // Reset allowances container
+            $('#allowancesContainer').html(`
+                <div class="allowance-item row mb-2">
+                    <div class="col-md-6">
+                        <select class="form-select allowance-type" name="allowance_type[]">
+                            <option value="">{{ __('payroll.select_allowance_type') }}</option>
+                            <option value="seniority">{{ __('payroll.offcanvas_details.allowances.seniority') }}</option>
+                            <option value="position">{{ __('payroll.offcanvas_details.allowances.position') }}</option>
+                            <option value="job">{{ __('payroll.offcanvas_details.allowances.job') }}</option>
+                            <option value="overtime">{{ __('payroll.offcanvas_details.allowances.overtime') }}</option>
+                            <option value="transportation">{{ __('payroll.offcanvas_details.allowances.transportation') }}</option>
+                            <option value="meal">{{ __('payroll.offcanvas_details.allowances.meal') }}</option>
+                            <option value="other">{{ __('payroll.offcanvas_details.allowances.other') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="number" class="form-control allowance-amount" name="allowance_amount[]" placeholder="{{ __('payroll.amount') }}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-allowance" style="display: none;">
+                            <i class="bx bx-x"></i>
+                        </button>
+                    </div>
+                </div>
+            `);
+            
+            // Reset deductions container
+            $('#deductionsContainer').html(`
+                <div class="deduction-item row mb-2">
+                    <div class="col-md-6">
+                        <select class="form-select deduction-type" name="deduction_type[]">
+                            <option value="">{{ __('payroll.select_deduction_type') }}</option>
+                            <option value="health_insurance">{{ __('payroll.offcanvas_details.deductions.health_insurance') }}</option>
+                            <option value="long_term_care_insurance">{{ __('payroll.offcanvas_details.deductions.long_term_care_insurance') }}</option>
+                            <option value="employment_insurance">{{ __('payroll.offcanvas_details.deductions.employment_insurance') }}</option>
+                            <option value="national_pension">{{ __('payroll.offcanvas_details.deductions.national_pension') }}</option>
+                            <option value="income_tax">{{ __('payroll.offcanvas_details.deductions.income_tax') }}</option>
+                            <option value="local_income_tax">{{ __('payroll.offcanvas_details.deductions.local_income_tax') }}</option>
+                            <option value="other">{{ __('payroll.offcanvas_details.deductions.other') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="number" class="form-control deduction-amount" name="deduction_amount[]" placeholder="{{ __('payroll.amount') }}" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-deduction" style="display: none;">
+                            <i class="bx bx-x"></i>
+                        </button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function calculateTotals() {
+            // Calculate total allowances
+            let totalAllowances = 0;
+            $('#allowancesContainer .allowance-amount').each(function() {
+                const amount = parseFloat($(this).val()) || 0;
+                totalAllowances += amount;
+            });
+            $('#totalAllowances').text(totalAllowances.toLocaleString());
+            
+            // Calculate total deductions
+            let totalDeductions = 0;
+            $('#deductionsContainer .deduction-amount').each(function() {
+                const amount = parseFloat($(this).val()) || 0;
+                totalDeductions += amount;
+            });
+            $('#totalDeductions').text(totalDeductions.toLocaleString());
+            
+            // Calculate gross pay and net pay
+            const baseSalary = parseFloat($('#modalBaseSalary').val()) || 0;
+            const grossPay = baseSalary + totalAllowances;
+            const netPay = grossPay - totalDeductions;
+            
+            $('#modalGrossPay').val(grossPay.toFixed(2));
+            $('#modalNetPay').val(netPay.toFixed(2));
+        }
+
+        function updateRemoveButtonsVisibility() {
+            // Show/hide remove buttons for allowances
+            const allowanceItems = $('#allowancesContainer .allowance-item');
+            allowanceItems.find('.remove-allowance').toggle(allowanceItems.length > 1);
+            
+            // Show/hide remove buttons for deductions  
+            const deductionItems = $('#deductionsContainer .deduction-item');
+            deductionItems.find('.remove-deduction').toggle(deductionItems.length > 1);
+        }
+
+        // Modal Event Handlers
         $('#savePayrollBtn').on('click', function() {
             const form = $('#payrollForm');
-            const isEdit = form.data('edit-mode') === true;
-            const payrollId = form.data('payroll-id');
             
             // Basic validation
             if (!form[0].checkValidity()) {
@@ -770,15 +988,64 @@
                 remarks: $('#modalRemarks').val()
             };
             
-            if (isEdit && payrollId) {
-                formData._method = 'PUT';
-                updatePayroll(payrollId, formData);
-            } else {
-                createPayroll(formData);
-            }
-            
-            // Hide modal after save
-            bootstrap.Modal.getInstance($('#payrollModal')[0])?.hide();
+            // Submit via AJAX
+            $.ajax({
+                url: '{{ route("payrolls.store") }}',
+                type: 'POST',
+                data: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '{{ __("payroll.created_successfully") }}',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        bootstrap.Modal.getInstance($('#payrollModal')[0])?.hide();
+                        // Reload the grid or page
+                        location.reload();
+                    }
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || '{{ __("payroll.creation_failed") }}';
+                    Swal.fire({
+                        icon: 'error',
+                        title: '{{ __("app.error") }}',
+                        text: message
+                    });
+                }
+            });
+        });
+
+        // Add/Remove Allowance Items
+        $('#addAllowanceBtn').on('click', function() {
+            addAllowanceItem();
+        });
+
+        $(document).on('click', '.remove-allowance', function() {
+            $(this).closest('.allowance-item').remove();
+            calculateTotals();
+            updateRemoveButtonsVisibility();
+        });
+
+        // Add/Remove Deduction Items
+        $('#addDeductionBtn').on('click', function() {
+            addDeductionItem();
+        });
+
+        $(document).on('click', '.remove-deduction', function() {
+            $(this).closest('.deduction-item').remove();
+            calculateTotals();
+            updateRemoveButtonsVisibility();
+        });
+
+        // Calculate totals when amounts change
+        $(document).on('input', '.allowance-amount, .deduction-amount, #modalBaseSalary', function() {
+            calculateTotals();
         });
 
         // Employee Selection Handler
@@ -791,37 +1058,12 @@
             }
         });
 
-        // Add/Remove Allowance Items
-        $('#addAllowanceBtn').on('click', function() {
-            addAllowanceItem();
-        });
-
-        $(document).on('click', '.remove-allowance', function() {
-            $(this).closest('.allowance-item').remove();
-            calculateTotals();
-        });
-
-        // Add/Remove Deduction Items
-        $('#addDeductionBtn').on('click', function() {
-            addDeductionItem();
-        });
-
-        $(document).on('click', '.remove-deduction', function() {
-            $(this).closest('.deduction-item').remove();
-            calculateTotals();
-        });
-
-        // Calculate totals when amounts change
-        $(document).on('input', '.allowance-amount, .deduction-amount, #modalBaseSalary', function() {
-            calculateTotals();
-        });
-
         // Load employees when modal opens
         $('#payrollModal').on('show.bs.modal', function() {
             loadEmployees();
         });
 
-        // Helper Functions for Employee Management
+        // Employee management functions
         function loadEmployees() {
             $.ajax({
                 url: '{{ route("payrolls.employees") }}',
@@ -844,44 +1086,6 @@
                 }
             });
         }
-        
-        // ** CORRECTED FUNCTION **
-        function calculateTotals() {
-            let totalAllowances = 0;
-            $('#allowancesContainer .allowance-amount').each(function() {
-                const amount = parseFloat($(this).val()) || 0;
-                totalAllowances += amount;
-            });
-            // Use .text() for the span and the correct ID
-            $('#totalAllowances').text(formatNumber(totalAllowances));
-
-            let totalDeductions = 0;
-            $('#deductionsContainer .deduction-amount').each(function() {
-                const amount = parseFloat($(this).val()) || 0;
-                totalDeductions += amount;
-            });
-            // Use .text() for the span and the correct ID
-            $('#totalDeductions').text(formatNumber(totalDeductions));
-
-            const baseSalary = parseFloat($('#modalBaseSalary').val()) || 0;
-            // Calculate gross pay
-            const grossPay = baseSalary + totalAllowances;
-            const netPay = grossPay - totalDeductions;
-
-            // Set the value of the readonly inputs
-            $('#modalGrossPay').val(formatNumber(grossPay));
-            $('#modalNetPay').val(formatNumber(netPay));
-        }
-        
-        // This formatNumber is scoped within document.ready and will be used by calculateTotals
-        function formatNumber(value) {
-            // Fallback for invalid values
-            if (isNaN(value) || value === null) {
-                value = 0;
-            }
-            // Using 'ko-KR' to match global function for consistency, but 'en-US' also works for formatting
-            return value.toLocaleString('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        }
 
         function loadEmployeeData(employeeId) {
             $.ajax({
@@ -898,6 +1102,8 @@
                         $('#modalDepartment').val(emp.department || '');
                         $('#modalPosition').val(emp.position || '');
                         $('#modalPhoneNumber').val(emp.phone_number || '');
+                        $('#modalBaseSalary').val(emp.base_salary || '');
+                        calculateTotals();
                     }
                 },
                 error: function(xhr) {
@@ -905,10 +1111,6 @@
                     clearEmployeeFields();
                 }
             });
-        }
-
-        function clearEmployeeFields() {
-            $('#modalEmployeeId, #modalEmployeeName, #modalDepartment, #modalPosition, #modalPhoneNumber').val('');
         }
 
         function addAllowanceItem() {
@@ -922,15 +1124,8 @@
                             <option value="position">{{ __('payroll.offcanvas_details.allowances.position') }}</option>
                             <option value="job">{{ __('payroll.offcanvas_details.allowances.job') }}</option>
                             <option value="overtime">{{ __('payroll.offcanvas_details.allowances.overtime') }}</option>
-                            <option value="holiday_special_work">{{ __('payroll.offcanvas_details.allowances.holiday_special_work') }}</option>
-                            <option value="night_shift">{{ __('payroll.offcanvas_details.allowances.night_shift') }}</option>
-                            <option value="bonus">{{ __('payroll.offcanvas_details.allowances.bonus') }}</option>
-                            <option value="adjustment">{{ __('payroll.offcanvas_details.allowances.adjustment') }}</option>
                             <option value="transportation">{{ __('payroll.offcanvas_details.allowances.transportation') }}</option>
                             <option value="meal">{{ __('payroll.offcanvas_details.allowances.meal') }}</option>
-                            <option value="labor_day">{{ __('payroll.offcanvas_details.allowances.labor_day') }}</option>
-                            <option value="annual_leave">{{ __('payroll.offcanvas_details.allowances.annual_leave') }}</option>
-                            <option value="welfare">{{ __('payroll.offcanvas_details.allowances.welfare') }}</option>
                             <option value="other">{{ __('payroll.offcanvas_details.allowances.other') }}</option>
                         </select>
                     </div>
@@ -978,275 +1173,7 @@
             updateRemoveButtonsVisibility();
         }
 
-        function updateRemoveButtonsVisibility() {
-            // Show/hide remove buttons for allowances
-            const allowanceItems = $('#allowancesContainer .allowance-item');
-            allowanceItems.find('.remove-allowance').toggle(allowanceItems.length > 1);
-            
-            // Show/hide remove buttons for deductions  
-            const deductionItems = $('#deductionsContainer .deduction-item');
-            deductionItems.find('.remove-deduction').toggle(deductionItems.length > 1);
-        }
-
-        function resetAllowanceDeductionContainers() {
-            // Reset allowances container
-            $('#allowancesContainer').html(`
-                <div class="allowance-item row mb-2">
-                    <div class="col-md-6">
-                        <select class="form-select allowance-type" name="allowance_type[]">
-                            <option value="">{{ __('payroll.select_allowance_type') }}</option>
-                            <option value="seniority">{{ __('payroll.offcanvas_details.allowances.seniority') }}</option>
-                            <option value="position">{{ __('payroll.offcanvas_details.allowances.position') }}</option>
-                            <option value="job">{{ __('payroll.offcanvas_details.allowances.job') }}</option>
-                            <option value="overtime">{{ __('payroll.offcanvas_details.allowances.overtime') }}</option>
-                            <option value="holiday_special_work">{{ __('payroll.offcanvas_details.allowances.holiday_special_work') }}</option>
-                            <option value="night_shift">{{ __('payroll.offcanvas_details.allowances.night_shift') }}</option>
-                            <option value="bonus">{{ __('payroll.offcanvas_details.allowances.bonus') }}</option>
-                            <option value="adjustment">{{ __('payroll.offcanvas_details.allowances.adjustment') }}</option>
-                            <option value="transportation">{{ __('payroll.offcanvas_details.allowances.transportation') }}</option>
-                            <option value="meal">{{ __('payroll.offcanvas_details.allowances.meal') }}</option>
-                            <option value="labor_day">{{ __('payroll.offcanvas_details.allowances.labor_day') }}</option>
-                            <option value="annual_leave">{{ __('payroll.offcanvas_details.allowances.annual_leave') }}</option>
-                            <option value="welfare">{{ __('payroll.offcanvas_details.allowances.welfare') }}</option>
-                            <option value="other">{{ __('payroll.offcanvas_details.allowances.other') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <input type="number" class="form-control allowance-amount" name="allowance_amount[]" placeholder="{{ __('payroll.amount') }}" min="0" step="0.01">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-allowance" style="display: none;">
-                            <i class="bx bx-x"></i>
-                        </button>
-                    </div>
-                </div>
-            `);
-            
-            // Reset deductions container
-            $('#deductionsContainer').html(`
-                <div class="deduction-item row mb-2">
-                    <div class="col-md-6">
-                        <select class="form-select deduction-type" name="deduction_type[]">
-                            <option value="">{{ __('payroll.select_deduction_type') }}</option>
-                            <option value="health_insurance">{{ __('payroll.offcanvas_details.deductions.health_insurance') }}</option>
-                            <option value="long_term_care_insurance">{{ __('payroll.offcanvas_details.deductions.long_term_care_insurance') }}</option>
-                            <option value="employment_insurance">{{ __('payroll.offcanvas_details.deductions.employment_insurance') }}</option>
-                            <option value="national_pension">{{ __('payroll.offcanvas_details.deductions.national_pension') }}</option>
-                            <option value="income_tax">{{ __('payroll.offcanvas_details.deductions.income_tax') }}</option>
-                            <option value="local_income_tax">{{ __('payroll.offcanvas_details.deductions.local_income_tax') }}</option>
-                            <option value="other">{{ __('payroll.offcanvas_details.deductions.other') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <input type="number" class="form-control deduction-amount" name="deduction_amount[]" placeholder="{{ __('payroll.amount') }}" min="0" step="0.01">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-deduction" style="display: none;">
-                            <i class="bx bx-x"></i>
-                        </button>
-                    </div>
-                </div>
-            `);
-            
-            // Reset totals
-            $('#totalAllowances').text('0');
-            $('#totalDeductions').text('0');
-            calculateTotals();
-        }
-
-        function addAllowanceItemWithData(type, amount) {
-            const container = $('#allowancesContainer');
-            const newItem = $(`
-                <div class="allowance-item row mb-2">
-                    <div class="col-md-6">
-                        <select class="form-select allowance-type" name="allowance_type[]">
-                            <option value="">{{ __('payroll.select_allowance_type') }}</option>
-                            <option value="seniority">{{ __('payroll.offcanvas_details.allowances.seniority') }}</option>
-                            <option value="position">{{ __('payroll.offcanvas_details.allowances.position') }}</option>
-                            <option value="job">{{ __('payroll.offcanvas_details.allowances.job') }}</option>
-                            <option value="overtime">{{ __('payroll.offcanvas_details.allowances.overtime') }}</option>
-                            <option value="holiday_special_work">{{ __('payroll.offcanvas_details.allowances.holiday_special_work') }}</option>
-                            <option value="night_shift">{{ __('payroll.offcanvas_details.allowances.night_shift') }}</option>
-                            <option value="bonus">{{ __('payroll.offcanvas_details.allowances.bonus') }}</option>
-                            <option value="adjustment">{{ __('payroll.offcanvas_details.allowances.adjustment') }}</option>
-                            <option value="transportation">{{ __('payroll.offcanvas_details.allowances.transportation') }}</option>
-                            <option value="meal">{{ __('payroll.offcanvas_details.allowances.meal') }}</option>
-                            <option value="labor_day">{{ __('payroll.offcanvas_details.allowances.labor_day') }}</option>
-                            <option value="annual_leave">{{ __('payroll.offcanvas_details.allowances.annual_leave') }}</option>
-                            <option value="welfare">{{ __('payroll.offcanvas_details.allowances.welfare') }}</option>
-                            <option value="other">{{ __('payroll.offcanvas_details.allowances.other') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <input type="number" class="form-control allowance-amount" name="allowance_amount[]" placeholder="{{ __('payroll.amount') }}" min="0" step="0.01">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-allowance">
-                            <i class="bx bx-x"></i>
-                        </button>
-                    </div>
-                </div>
-            `);
-            container.append(newItem);
-            
-            // Set the values
-            newItem.find('.allowance-type').val(type);
-            newItem.find('.allowance-amount').val(amount);
-        }
-
-        function addDeductionItemWithData(type, amount) {
-            const container = $('#deductionsContainer');
-            const newItem = $(`
-                <div class="deduction-item row mb-2">
-                    <div class="col-md-6">
-                        <select class="form-select deduction-type" name="deduction_type[]">
-                            <option value="">{{ __('payroll.select_deduction_type') }}</option>
-                            <option value="health_insurance">{{ __('payroll.offcanvas_details.deductions.health_insurance') }}</option>
-                            <option value="long_term_care_insurance">{{ __('payroll.offcanvas_details.deductions.long_term_care_insurance') }}</option>
-                            <option value="employment_insurance">{{ __('payroll.offcanvas_details.deductions.employment_insurance') }}</option>
-                            <option value="national_pension">{{ __('payroll.offcanvas_details.deductions.national_pension') }}</option>
-                            <option value="income_tax">{{ __('payroll.offcanvas_details.deductions.income_tax') }}</option>
-                            <option value="local_income_tax">{{ __('payroll.offcanvas_details.deductions.local_income_tax') }}</option>
-                            <option value="other">{{ __('payroll.offcanvas_details.deductions.other') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-md-5">
-                        <input type="number" class="form-control deduction-amount" name="deduction_amount[]" placeholder="{{ __('payroll.amount') }}" min="0" step="0.01">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-outline-danger btn-sm remove-deduction">
-                            <i class="bx bx-x"></i>
-                        </button>
-                    </div>
-                </div>
-            `);
-            container.append(newItem);
-            
-            // Set the values
-            newItem.find('.deduction-type').val(type);
-            newItem.find('.deduction-amount').val(amount);
-        }
-
-        // Global Functions for Modal Operations
-        window.openCreatePayrollModal = function() {
-            const form = $('#payrollForm');
-            const modal = new bootstrap.Modal($('#payrollModal')[0]);
-            
-            // Reset form
-            form[0].reset();
-            form.removeData('edit-mode').removeData('payroll-id');
-            $('#payrollModalTitle').text('{{ __("payroll.create_new") }}');
-            $('#savePayrollBtn').text('{{ __("app.create") }}');
-            
-            // Reset employee selection
-            $('#modalEmployeeSelect').val('').trigger('change');
-            clearEmployeeFields();
-            
-            // Reset allowance and deduction containers to have one empty item each
-            resetAllowanceDeductionContainers();
-            calculateTotals();
-            updateRemoveButtonsVisibility();
-            
-            modal.show();
-        };
-
-        window.openEditPayrollModal = function(payrollData) {
-            const form = $('#payrollForm');
-            const modal = new bootstrap.Modal($('#payrollModal')[0]);
-            
-            // Set form data
-            form.data('edit-mode', true).data('payroll-id', payrollData.id);
-            $('#payrollModalTitle').text('{{ __("payroll.edit_payroll") }}');
-            $('#savePayrollBtn').text('{{ __("app.update") }}');
-            
-            // Populate basic employee information
-            $('#modalEmployeeSelect').val(''); // Clear selection in edit mode
-            $('#modalEmployeeId').val(payrollData.employee_id);
-            $('#modalEmployeeName').val(payrollData.name);
-            $('#modalDepartment').val(payrollData.department);
-            $('#modalPosition').val(payrollData.position);
-            $('#modalPhoneNumber').val(payrollData.phone_number);
-            $('#modalWorkDays').val(payrollData.work_days);
-            $('#modalBaseSalary').val(payrollData.base_salary);
-            $('#modalRemarks').val(payrollData.remarks);
-            
-            // Reset and populate allowance/deduction items
-            resetAllowanceDeductionContainers();
-            
-            // Load allowance items if they exist
-            if (payrollData.allowance_items && payrollData.allowance_items.length > 0) {
-                $('#allowancesContainer').empty();
-                payrollData.allowance_items.forEach(function(item) {
-                    addAllowanceItemWithData(item.type, item.amount);
-                });
-            }
-            
-            // Load deduction items if they exist
-            if (payrollData.deduction_items && payrollData.deduction_items.length > 0) {
-                $('#deductionsContainer').empty();
-                payrollData.deduction_items.forEach(function(item) {
-                    addDeductionItemWithData(item.type, item.amount);
-                });
-            }
-            
-            // Calculate totals
-            calculateTotals();
-            updateRemoveButtonsVisibility();
-            
-            modal.show();
-        };
-
-        window.openImportModal = function() {
-            const modal = new bootstrap.Modal($('#importModal')[0]);
-            $('#importFile').val('');
-            $('#importPreview').addClass('d-none');
-            modal.show();
-        };
-
-        function createPayroll(formData) {
-            $.ajax({
-                url: '{{ route("payrolls.store") }}',
-                type: 'POST',
-                data: formData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}', // Essential for POST requests in Laravel
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                success: function(response) {
-                    bootstrap.Modal.getInstance($('#payrollModal')[0])?.hide();
-                    alert(response.message || '{{ __("payroll.created_successfully") }}');
-                    loadPayrollData(); // Reload the grid to show the new entry
-                },
-                error: function(xhr) {
-                    console.error('Error creating payroll:', xhr.responseText);
-                    alert('{{ __("payroll.create_failed") }}' + '\n' + (xhr.responseJSON?.message || 'Please check the console for details.'));
-                }
-            });
-        }
-
-        function updatePayroll(payrollId, formData) {
-             $.ajax({
-                // The route needs a placeholder to be replaced by the actual ID
-                url: '{{ route("payrolls.update", ":id") }}'.replace(':id', payrollId),
-                type: 'POST', // Use POST and rely on the '_method' field for Laravel to treat it as PUT
-                data: formData,
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                success: function(response) {
-                    bootstrap.Modal.getInstance($('#payrollModal')[0])?.hide();
-                    alert(response.message || '{{ __("payroll.updated_successfully") }}');
-                    loadPayrollData(); // Reload the grid to reflect changes
-                },
-                error: function(xhr) {
-                    console.error('Error updating payroll:', xhr.responseText);
-                    alert('{{ __("payroll.update_failed") }}' + '\n' + (xhr.responseJSON?.message || 'Please check the console for details.'));
-                }
-            });
-        }
-
-    }});
+    }); // End document.ready
   </script>
 @endsection
 
@@ -1274,15 +1201,15 @@
         <div class="actions-bar-left btn-group" role="group">
             <button class="btn btn-action-filter btn-sm" data-datafield="department" data-filter-value="SETEC">{{ $image_filter_site_button }}</button>
             <button class="btn btn-action-filter btn-sm" data-datafield="payroll_month_field" data-filter-value="{{ $currentPayrollMonth }}">{{ $image_filter_month_button }}</button>
-            <button class="btn btn-success btn-sm ms-2" onclick="openCreatePayrollModal()">
-                <i class="bx bx-plus me-1"></i>{{ __('payroll.create_new') }}
-            </button>
-            <button class="btn btn-info btn-sm" onclick="openImportModal()">
-                <i class="bx bx-import me-1"></i>{{ __('app.import') }}
-            </button>
         </div>
         <div class="actions-bar-right">
             <span id="selectedCountDisplay" class="selected-count-display">{{ $image_selected_count_text }}</span>
+            <button class="btn btn-success btn-sm me-2" onclick="openCreatePayrollModal()">
+                <i class="bx bx-plus me-1"></i>{{ __('payroll.create_new') }}
+            </button>
+            <button class="btn btn-primary btn-sm me-2" onclick="openImportModal()">
+                <i class="bx bx-import me-1"></i>{{ __('payroll.import_title') }}
+            </button>
             <button class="btn btn-send-sms-custom btn-sm"><i class="bx bx-mail-send me-1"></i>{{ $image_send_sms_button_text }}</button>
             <div class="input-group input-group-sm search-action-group" style="width: 220px;">
                  <span class="input-group-text"><i class="bx bx-search"></i></span>
@@ -1312,6 +1239,60 @@
     </div>
 </div>
 
+{{-- Offcanvas for SMS Preview & Send --}}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasSmsPreview" aria-labelledby="offcanvasSmsPreviewLabel" data-bs-backdrop="static" style="width: 750px;">
+    <div class="offcanvas-header"><h5 class="offcanvas-title" id="offcanvasSmsPreviewLabel">{{ __('payroll.offcanvas_sms.title') }}</h5><button type="button" class="btn-close btn-close-sms-custom" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
+    <div class="offcanvas-body">
+        <div class="sms-offcanvas-left-panel">
+            <div id="smsSelectedEmployeesCount" class="selected-info"></div>
+            <div class="search-employee-sms"><input type="text" class="form-control form-control-sm" id="smsEmployeeSearchInput" placeholder="{{ __('payroll.offcanvas_sms.search_placeholder') }}"></div>
+            <div class="employee-sms-list-container"><table class="employee-sms-list-table"><thead><tr><th>{{ __('payroll.offcanvas_sms.employee_list_header_id') }}</th><th>{{ __('payroll.offcanvas_sms.employee_list_header_department') }}</th><th>{{ __('payroll.offcanvas_sms.employee_list_header_name') }}</th><th>{{ __('payroll.offcanvas_sms.employee_list_header_phone') }}</th></tr></thead><tbody id="employeeSmsListTableBody"></tbody></table></div>
+        </div>
+        <div class="sms-offcanvas-right-panel">
+            {{-- This is the phone structure from the image --}}
+            <div class="phone-preview-outer">
+                <div class="phone-preview-container">
+                    <div class="phone-preview-notch"></div>
+                    <div class="phone-preview-top-bar">
+                        <span class="time">9:41 AM</span>
+                        <span class="status-icons">
+                            <i class="bx bx-wifi"></i> <i class="bx bxs-battery"></i>
+                        </span>
+                    </div>
+                    <div class="phone-preview-contact-header">
+                        <span class="back-arrow">〈</span>
+                        <div class="contact-name-details">
+                            <div id="smsPreviewContactName" class="contact-name">{{ __('payroll.offcanvas_sms.sms_recipient_label') }}</div>
+                            {{-- <div class="contact-subtext">mobile</div> --}}
+                        </div>
+                    </div>
+                    <div id="smsPreviewMessageContent" class="phone-preview-messages">
+                        {{-- Bubbles will be injected here by JS --}}
+                    </div>
+                </div>
+            </div>
+            {{-- Controls below the phone --}}
+            <div class="sms-controls-area">
+                <form id="smsPreviewForm" onsubmit="return false;">
+                     <div class="sms-message-template-area">
+                        <label for="smsMessageTemplateTextarea">{{ __('payroll.offcanvas_sms.message_template_label') }}</label>
+                        <textarea class="form-control form-control-sm" id="smsMessageTemplateTextarea" rows="3"></textarea>
+                    </div>
+                    <div class="sms-info-group">
+                        <span class="label">{{ __('payroll.offcanvas_sms.sender_number_label') }}:</span> <span id="smsSenderNumberValue" class="value"></span>
+                    </div>
+                    <div class="sms-info-group">
+                        <span class="label">{{ __('payroll.offcanvas_sms.remaining_points_label') }}:</span> <span id="smsRemainingPointsValue" class="value"></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="offcanvas-footer">
+        <button type="submit" form="smsPreviewForm" class="btn btn-primary btn-resend-sms w-100"><i class="bx bx-send me-1"></i>{{ __('payroll.offcanvas_sms.resend_sms_button') }}</button>
+    </div>
+</div>
+
 {{-- Modal for Create/Edit Payroll --}}
 <div class="modal fade" id="payrollModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -1333,7 +1314,7 @@
                     
                     <!-- Employee Information (auto-filled) -->
                     <div class="col-md-6">
-                        <label for="modalEmployeeId" class="form-label">{{ __('payroll.table.header.employee_id_short') }}</label>
+                        <label for="modalEmployeeId" class="form-label">{{ __('payroll.employee_id') }}</label>
                         <input type="text" id="modalEmployeeId" name="employee_id" class="form-control" readonly required>
                     </div>
                     <div class="col-md-6">
@@ -1341,11 +1322,11 @@
                         <input type="text" id="modalEmployeeName" name="name" class="form-control" readonly required>
                     </div>
                     <div class="col-md-6">
-                        <label for="modalDepartment" class="form-label">{{ __('payroll.table.header.department') }}</label>
+                        <label for="modalDepartment" class="form-label">{{ __('payroll.department') }}</label>
                         <input type="text" id="modalDepartment" name="department" class="form-control" readonly required>
                     </div>
                     <div class="col-md-6">
-                        <label for="modalPosition" class="form-label">{{ __('payroll.table.header.position') }}</label>
+                        <label for="modalPosition" class="form-label">{{ __('payroll.position') }}</label>
                         <input type="text" id="modalPosition" name="position" class="form-control" readonly required>
                     </div>
                     <div class="col-md-6">
@@ -1448,11 +1429,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="modalGrossPay" class="form-label">{{ __('payroll.gross_pay') }}</label>
-                                <input type="text" id="modalGrossPay" name="gross_pay" class="form-control" readonly style="text-align: right;">
+                                <input type="number" id="modalGrossPay" name="gross_pay" class="form-control" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label for="modalNetPay" class="form-label">{{ __('payroll.net_pay') }}</label>
-                                <input type="text" id="modalNetPay" name="net_pay" class="form-control" readonly style="text-align: right;">
+                                <input type="number" id="modalNetPay" name="net_pay" class="form-control" readonly>
                             </div>
                         </div>
                     </div>
@@ -1496,60 +1477,6 @@
                 <button type="button" class="btn btn-primary" id="importPayrollBtn">{{ __('payroll.import_button') }}</button>
             </div>
         </div>
-    </div>
-</div>
-
-{{-- Offcanvas for SMS Preview & Send --}}
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasSmsPreview" aria-labelledby="offcanvasSmsPreviewLabel" data-bs-backdrop="static" style="width: 750px;">
-    <div class="offcanvas-header"><h5 class="offcanvas-title" id="offcanvasSmsPreviewLabel">{{ __('payroll.offcanvas_sms.title') }}</h5><button type="button" class="btn-close btn-close-sms-custom" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
-    <div class="offcanvas-body">
-        <div class="sms-offcanvas-left-panel">
-            <div id="smsSelectedEmployeesCount" class="selected-info"></div>
-            <div class="search-employee-sms"><input type="text" class="form-control form-control-sm" id="smsEmployeeSearchInput" placeholder="{{ __('payroll.offcanvas_sms.search_placeholder') }}"></div>
-            <div class="employee-sms-list-container"><table class="employee-sms-list-table"><thead><tr><th>{{ __('payroll.offcanvas_sms.employee_list_header_id') }}</th><th>{{ __('payroll.offcanvas_sms.employee_list_header_department') }}</th><th>{{ __('payroll.offcanvas_sms.employee_list_header_name') }}</th><th>{{ __('payroll.offcanvas_sms.employee_list_header_phone') }}</th></tr></thead><tbody id="employeeSmsListTableBody"></tbody></table></div>
-        </div>
-        <div class="sms-offcanvas-right-panel">
-            {{-- This is the phone structure from the image --}}
-            <div class="phone-preview-outer">
-                <div class="phone-preview-container">
-                    <div class="phone-preview-notch"></div>
-                    <div class="phone-preview-top-bar">
-                        <span class="time">9:41 AM</span>
-                        <span class="status-icons">
-                            <i class="bx bx-wifi"></i> <i class="bx bxs-battery"></i>
-                        </span>
-                    </div>
-                    <div class="phone-preview-contact-header">
-                        <span class="back-arrow">〈</span>
-                        <div class="contact-name-details">
-                            <div id="smsPreviewContactName" class="contact-name">{{ __('payroll.offcanvas_sms.sms_recipient_label') }}</div>
-                            {{-- <div class="contact-subtext">mobile</div> --}}
-                        </div>
-                    </div>
-                    <div id="smsPreviewMessageContent" class="phone-preview-messages">
-                        {{-- Bubbles will be injected here by JS --}}
-                    </div>
-                </div>
-            </div>
-            {{-- Controls below the phone --}}
-            <div class="sms-controls-area">
-                <form id="smsPreviewForm" onsubmit="return false;">
-                     <div class="sms-message-template-area">
-                        <label for="smsMessageTemplateTextarea">{{ __('payroll.offcanvas_sms.message_template_label') }}</label>
-                        <textarea class="form-control form-control-sm" id="smsMessageTemplateTextarea" rows="3"></textarea>
-                    </div>
-                    <div class="sms-info-group">
-                        <span class="label">{{ __('payroll.offcanvas_sms.sender_number_label') }}:</span> <span id="smsSenderNumberValue" class="value"></span>
-                    </div>
-                    <div class="sms-info-group">
-                        <span class="label">{{ __('payroll.offcanvas_sms.remaining_points_label') }}:</span> <span id="smsRemainingPointsValue" class="value"></span>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="offcanvas-footer">
-        <button type="submit" form="smsPreviewForm" class="btn btn-primary btn-resend-sms w-100"><i class="bx bx-send me-1"></i>{{ __('payroll.offcanvas_sms.resend_sms_button') }}</button>
     </div>
 </div>
 @endsection
