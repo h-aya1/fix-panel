@@ -1,0 +1,32 @@
+<?php
+
+return [
+    'search' => '검색',
+    'search_placeholder' => '검색...',
+    'edit_button' => '수정하기',
+    'setec_button' => 'SETEC',
+    
+    // Common CRUD operations
+    'create' => '생성',
+    'edit' => '수정',
+    'update' => '업데이트',
+    'delete' => '삭제',
+    'save' => '저장',
+    'cancel' => '취소',
+    'confirm' => '확인',
+    'yes' => '예',
+    'no' => '아니오',
+    'success' => '성공',
+    'error' => '오류',
+    'warning' => '경고',
+    'info' => '정보',
+    'loading' => '로딩 중...',
+    'select_all' => '전체 선택',
+    'deselect_all' => '전체 해제',
+    'bulk_delete' => '일괄 삭제',
+    'import' => '가져오기',
+    'export' => '내보내기',
+    'upload' => '업로드',
+    'download' => '다운로드',
+    'preview' => '미리보기',
+];

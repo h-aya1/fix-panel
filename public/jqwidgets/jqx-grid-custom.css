@@ -1,0 +1,1108 @@
+:root {
+  --jqx-border-radius: 4px; /* Slightly more rounded for a softer look */
+  --jqx-border-radius-zero: 0px;
+  --jqx-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Modern system font stack */
+  --jqx-font-size-default: 14px; /* Slightly larger default */
+  --jqx-font-size-sm: 12px;
+  --jqx-font-size-xs: 11px;
+  --jqx-line-height: 1.5; /* Increased for better readability */
+
+  --jqx-color-text: #212529; /* Darker gray, less harsh than pure black */
+  --jqx-color-text-light: #495057;
+  --jqx-color-text-lighter: #6c757d;
+  --jqx-color-text-link: #0d6efd; /* Standard link blue */
+  --jqx-color-text-disabled: #adb5bd;
+  --jqx-color-text-white: #ffffff;
+  --jqx-color-text-error: #dc3545;
+
+  --jqx-border-color-transparent: transparent;
+  --jqx-bg-transparent: transparent;
+
+  /* Base widget styles */
+  --jqx-widget-color: var(--jqx-color-text);
+  --jqx-widget-font-family: var(--jqx-font-family);
+  --jqx-widget-font-size: var(--jqx-font-size-default);
+
+  /* MODIFIED FOR MODERN TABLES */
+  --jqx-widget-content-border-color: #dee2e6; /* Lighter border color */
+  --jqx-widget-content-bg: #ffffff;
+
+  --jqx-widget-header-border-color: #ced4da; /* Slightly darker for header distinctiveness */
+  --jqx-widget-header-bg: #f8f9fa; /* Very light gray for headers */
+
+  /* Fill states - made more subtle */
+  --jqx-fill-state-normal-border-color: var(--jqx-widget-content-border-color);
+  --jqx-fill-state-normal-bg: #f8f9fa; /* Light background for normal/alt states */
+
+  --jqx-fill-state-hover-border-color: #adb5bd;
+  --jqx-fill-state-hover-bg: #e9ecef; /* Subtle hover */
+
+  --jqx-fill-state-pressed-border-color: #adb5bd;
+  --jqx-fill-state-pressed-bg: #dee2e6; /* Subtle pressed */
+
+  --jqx-fill-state-focus-border-color: #86b7fe; /* Focus ring color (Bootstrap-like) */
+
+  /* Selected state (can be used for selected rows) */
+  --jqx-fill-state-selected-bg: #cfe2ff; /* Light blueish for selection */
+  --jqx-fill-state-selected-color: #052c65; /* Dark blue text for selected */
+  --jqx-fill-state-selected-border-color: #9ec5fe; /* Border color for selected items */
+
+
+  /* Notification Colors - Keeping these as they are Bootstrap-like and generally modern */
+  --jqx-notification-info-color: var(--jqx-color-text-white);
+  --jqx-notification-info-text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  --jqx-notification-info-bg: #0dcaf0;
+  --jqx-notification-info-bg-gradient-start: #3dd5f3;
+  --jqx-notification-info-bg-gradient-end: #0dcaf0;
+  --jqx-notification-info-border-color: #0dcaf0;
+  --jqx-notification-info-border-bottom-color: #0899b3;
+
+  --jqx-notification-warning-color: var(--jqx-color-text);
+  --jqx-notification-warning-text-shadow: none;
+  --jqx-notification-warning-bg: #ffc107;
+  --jqx-notification-warning-bg-gradient-start: #ffca2c;
+  --jqx-notification-warning-bg-gradient-end: #ffc107;
+  --jqx-notification-warning-border-color: #ffc107;
+  --jqx-notification-warning-border-bottom-color: #cc9a06;
+
+  --jqx-notification-success-color: var(--jqx-color-text-white);
+  --jqx-notification-success-text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  --jqx-notification-success-bg: #198754;
+  --jqx-notification-success-bg-gradient-start: #1eb770;
+  --jqx-notification-success-bg-gradient-end: #198754;
+  --jqx-notification-success-border-color: #198754;
+  --jqx-notification-success-border-bottom-color: #13653f;
+
+  --jqx-notification-error-color: var(--jqx-color-text-white);
+  --jqx-notification-error-text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  --jqx-notification-error-bg: #dc3545;
+  --jqx-notification-error-bg-gradient-start: #e45763;
+  --jqx-notification-error-bg-gradient-end: #dc3545;
+  --jqx-notification-error-border-color: #dc3545;
+  --jqx-notification-error-border-bottom-color: #b02a37;
+
+  --jqx-notification-primary-color: var(--jqx-color-text-white);
+  --jqx-notification-primary-text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  --jqx-notification-primary-bg: #0d6efd;
+  --jqx-notification-primary-bg-gradient-start: #2b7eff;
+  --jqx-notification-primary-bg-gradient-end: #0d6efd;
+  --jqx-notification-primary-border-color: #0d6efd;
+  --jqx-notification-primary-border-bottom-color: #0a58ca;
+
+  --jqx-notification-inverse-color: var(--jqx-color-text-white);
+  --jqx-notification-inverse-text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  --jqx-notification-inverse-bg: #343a40;
+  --jqx-notification-inverse-bg-gradient-start: #495057;
+  --jqx-notification-inverse-bg-gradient-end: #343a40;
+  --jqx-notification-inverse-border-color: #343a40;
+  --jqx-notification-inverse-border-bottom-color: #1d2124;
+}
+
+/* General Widget Styling */
+.jqx-widget,
+.jqx-widget-content,
+.jqx-widget-header,
+.jqx-fill-state-normal,
+.jqx-fill-state-hover,
+.jqx-fill-state-pressed,
+.jqx-fill-state-focus {
+    box-sizing: border-box;
+}
+
+.jqx-widget {
+    color: var(--jqx-widget-color);
+    font-family: var(--jqx-widget-font-family);
+    font-size: var(--jqx-widget-font-size);
+    line-height: var(--jqx-line-height);
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+.jqx-widget-content {
+    border: 1px solid var(--jqx-widget-content-border-color);
+    background-color: var(--jqx-widget-content-bg);
+    color: var(--jqx-widget-color);
+}
+.jqx-widget-header {
+    border: 1px solid var(--jqx-widget-header-border-color);
+    background-color: var(--jqx-widget-header-bg);
+    color: var(--jqx-widget-color);
+}
+
+.jqx-fill-state-normal{
+    border-color: var(--jqx-fill-state-normal-border-color);
+    background: var(--jqx-fill-state-normal-bg);
+}
+.jqx-fill-state-hover {
+    border-color: var(--jqx-fill-state-hover-border-color);
+    background: var(--jqx-fill-state-hover-bg);
+}
+.jqx-fill-state-pressed{
+    border-color: var(--jqx-fill-state-pressed-border-color);
+    background: var(--jqx-fill-state-pressed-bg);
+}
+.jqx-fill-state-focus {
+    border-color: var(--jqx-fill-state-focus-border-color);
+    /* Optional: Add a box-shadow for focus for better accessibility */
+    /* box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25); */
+}
+.jqx-fill-state-disabled {
+    cursor: default;
+    color: var(--jqx-color-text-disabled);
+    opacity: .65;
+}
+
+
+/* MODERNIZED GRID / TABLE STYLES - REVISED */
+
+/* Overall Grid Container */
+.jqx-grid {
+    border: 1px solid var(--jqx-widget-content-border-color);
+    overflow: hidden;
+    border-radius: var(--jqx-border-radius);
+    background-color: var(--jqx-widget-content-bg); /* Ensure grid bg is consistent */
+}
+
+/* Grid Header Area (contains column headers AND filter row) */
+.jqx-grid-header {
+    border: none; /* The block itself has no border */
+    /* A single line separating the entire header block from content is handled by column headers' bottom border */
+    background-color: var(--jqx-widget-header-bg);
+    overflow: hidden;
+    padding: 0px;
+    margin: 0px;
+}
+
+/* Column Headers Titles */
+.jqx-grid-column-header,
+.jqx-grid-columngroup-header {
+    font-weight: 600; /* Bolder headers */
+    background-color: var(--jqx-widget-header-bg);
+    color: var(--jqx-color-text);
+    border-style: solid;
+    border-color: var(--jqx-widget-header-border-color);
+    /* TOP / RIGHT / BOTTOM / LEFT */
+    border-width: 0 0 1px 0; /* Only bottom border for the title part of the header cell */
+    /* If you want a subtle right border for separation: border-width: 0 1px 1px 0; */
+    padding: 0.65rem 0.75rem;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    box-sizing: border-box; /* ensure padding is within the cell */
+}
+.jqx-grid-column-header:last-child,
+.jqx-grid-columngroup-header:last-child {
+    /* border-right-width: 0;  Remove right border on last header cell if using vertical separators */
+}
+.jqx-grid-column-header-rtl,
+.jqx-grid-columngroup-header-rtl {
+    text-align: right;
+    /* border-width: 0 0 1px 1px; if using vertical separators for RTL */
+}
+.jqx-grid-column-header-rtl:last-child,
+.jqx-grid-columngroup-header-rtl:last-child {
+    /* border-left-width: 0; */
+}
+
+
+/* Styling for the filter row input fields */
+/* This targets input elements within the jqx-grid-header. jQWidgets might wrap these inputs. */
+.jqx-grid-header .jqx-widget-content input[type="text"].jqx-input, /* More specific if inputs are wrapped */
+.jqx-grid-header input[type="text"].jqx-input {
+    padding: 0.5rem 0.75rem !important;
+    font-size: var(--jqx-font-size-default);
+    border: 1px solid var(--jqx-widget-header-border-color) !important; /* Match header border */
+    border-radius: var(--jqx-border-radius);
+    background-color: var(--jqx-widget-content-bg) !important; /* White background for input */
+    color: var(--jqx-color-text);
+    height: auto;
+    min-height: unset;
+    box-shadow: none;
+    width: 100%; /* Make inputs fill their header cell space */
+    box-sizing: border-box;
+    line-height: var(--jqx-line-height); /* Ensure text is vertically centered */
+    margin: 0; /* Reset margin */
+}
+/* If the input is directly inside the header cell without other wrappers: */
+.jqx-grid-column-header > .jqx-input { /* Example if filter input is direct child */
+    margin-top: 4px; /* Add some space between title and filter input if needed */
+    margin-bottom: 4px;
+}
+
+
+/* Grid Content Area (contains the table) */
+.jqx-grid-content {
+    border: none;
+    overflow: hidden; /* jqxGrid manages scrolling */
+}
+
+/* The main <table> element */
+.jqx-grid-table {
+    width: 100% !important;
+    border-collapse: collapse !important; /* CRITICAL for modern table borders */
+    border-spacing: 0;
+    table-layout: fixed;
+    margin: 0px;
+    padding: 0px;
+    font-size: var(--jqx-font-size-default);
+    line-height: var(--jqx-line-height);
+}
+
+/* Grid Cells (<td>) within the table body */
+.jqx-grid-table .jqx-grid-cell {
+    position: static !important; /* Keep from original if needed by jQWidgets */
+    padding: 0.65rem 0.75rem;
+    border-style: solid !important;
+    /* TOP / RIGHT / BOTTOM / LEFT borders */
+    border-width: 0 0 1px 0 !important; /* Only a bottom border for row separation */
+    border-color: var(--jqx-widget-content-border-color) !important;
+    background-color: var(--jqx-widget-content-bg);
+    color: var(--jqx-color-text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    margin: 0 !important;
+    box-sizing: border-box;
+}
+
+/* Ensure no accidental left/right borders on first/last cells due to other rules */
+.jqx-grid-table .jqx-grid-cell:first-child {
+    border-left-width: 0 !important;
+}
+.jqx-grid-table .jqx-grid-cell:last-child {
+    border-right-width: 0 !important;
+}
+.jqx-grid-cell-rtl {
+    text-align: right;
+}
+
+/* Alternating Row Color - subtle */
+.jqx-grid-cell-alt,
+.jqx-grid-table tr:nth-child(even) .jqx-grid-cell { /* More robust if possible */
+    background-color: var(--jqx-fill-state-normal-bg);
+}
+
+/* Hovered Cell/Row */
+.jqx-grid-cell-hover,
+.jqx-grid-table tr:hover .jqx-grid-cell {
+    background-color: var(--jqx-fill-state-hover-bg);
+    color: var(--jqx-color-text);
+}
+
+/* Selected Cell/Row */
+.jqx-grid-cell-selected,
+.jqx-grid-table tr.jqx-grid-row-selected .jqx-grid-cell {
+    background-color: var(--jqx-fill-state-selected-bg) !important;
+    color: var(--jqx-fill-state-selected-color) !important;
+    border-bottom-color: var(--jqx-fill-state-selected-border-color) !important;
+}
+.jqx-grid-cell-selected { /* Clean up other borders that might be added by this class */
+   border-left-width: 0 !important;
+   border-right-width: 0 !important;
+   border-top-width: 0 !important;
+}
+
+
+/* Pager */
+.jqx-grid-pager {
+    border-top: 1px solid var(--jqx-widget-content-border-color);
+    background-color: var(--jqx-widget-header-bg);
+    padding: 0.5rem 0.75rem;
+    color: var(--jqx-color-text);
+}
+.jqx-grid-pager-number{
+    padding: 0.25rem 0.5rem;
+    text-decoration: none;
+    margin: 1px;
+    border: 1px solid var(--jqx-border-color-transparent);
+    color: var(--jqx-color-text-link) !important;
+    outline: none;
+    font-weight: normal !important;
+    border-radius: var(--jqx-border-radius);
+}
+.jqx-grid-pager-number:hover {
+    background-color: var(--jqx-fill-state-hover-bg);
+    border-color: var(--jqx-fill-state-hover-border-color);
+    color: var(--jqx-color-text-link) !important;
+}
+.jqx-grid-pager .jqx-fill-state-pressed.jqx-grid-pager-number, /* Selected page number */
+.jqx-grid-pager span[data-page].jqx-fill-state-pressed {
+    background-color: var(--jqx-color-text-link) !important;
+    color: var(--jqx-color-text-white) !important;
+    border-color: var(--jqx-color-text-link) !important;
+}
+
+
+/* Cell wrapping */
+.jqx-grid-cell-wrap {
+    white-space: normal !important;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+/* Icons in headers (menu, sort, filter) */
+.jqx-grid-column-menubutton,
+.jqx-grid-column-sortascbutton,
+.jqx-grid-column-sortdescbutton,
+.jqx-grid-column-filterbutton {
+    background-color: var(--jqx-bg-transparent);
+    border: none !important; /* Remove borders around icons themselves */
+    /* Vertical separator for menu button if desired */
+    /* margin-left: 4px; */
+    /* border-left: 1px solid var(--jqx-widget-header-border-color); */
+    /* padding-left: 4px; */
+}
+.jqx-grid-column-menubutton-rtl {
+    /* margin-right: 4px; */
+    /* border-right: 1px solid var(--jqx-widget-header-border-color); */
+    /* padding-right: 4px; */
+}
+
+/* Validation message */
+ .jqx-grid-validation {
+    background: var(--jqx-color-text-error) !important;
+    color: var(--jqx-color-text-white)  !important;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--jqx-border-radius);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+ }
+
+/* Ensure original .jqx-input specific styles don't conflict heavily if not needed */
+input[type=text].jqx-input, input[type=password].jqx-input {
+    /* Original had:
+    min-height: 16px;
+    min-width: 16px;
+    margin: 0px;
+    border-width: 1px;
+    border-style: solid;
+    font-size: var(--jqx-font-size-default);
+    padding: 0px; -> This is problematic for filter inputs, hence overridden above
+    */
+    /* If these defaults are needed elsewhere, keep them, but filter inputs are specially styled */
+}
+
+/* --- Other jQWidgets styles from your original file continue below this line --- */
+/* For brevity, I'm not repeating all non-grid styles. Integrate the above grid styles into your full CSS file. */
+
+/*Rounded Corners*/
+/*top-left rounded Corners*/
+.jqx-rc-tl
+{
+    border-top-left-radius: var(--jqx-border-radius);
+}
+/*top-right rounded Corners*/
+.jqx-rc-tr
+{
+    border-top-right-radius: var(--jqx-border-radius);
+}
+/*bottom-left rounded Corners*/
+.jqx-rc-bl
+{
+    border-bottom-left-radius: var(--jqx-border-radius);
+}
+/*bottom-right rounded Corners*/
+.jqx-rc-br
+{
+    border-bottom-right-radius: var(--jqx-border-radius);
+}
+/*top rounded Corners*/
+.jqx-rc-t
+{
+    border-top-left-radius: var(--jqx-border-radius);
+    border-top-right-radius: var(--jqx-border-radius);
+}
+/*bottom rounded Corners*/
+.jqx-rc-b
+{
+    border-bottom-left-radius: var(--jqx-border-radius);
+    border-bottom-right-radius: var(--jqx-border-radius);
+}
+/*right rounded Corners*/
+.jqx-rc-r
+{
+    border-top-right-radius: var(--jqx-border-radius);
+    border-bottom-right-radius: var(--jqx-border-radius);
+}
+/*left rounded Corners*/
+.jqx-rc-l
+{
+    border-top-left-radius: var(--jqx-border-radius);
+    border-bottom-left-radius: var(--jqx-border-radius);
+}
+/*all rounded Corners*/
+.jqx-rc-all
+{
+    border-radius: var(--jqx-border-radius);
+}
+/*reset rounded corners*/
+.jqx-rc-reset
+{
+    border-radius: var(--jqx-border-radius-zero) !important;
+}
+
+/*Reset Style*/
+.jqx-reset
+{
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: var(--jqx-bg-transparent);
+    outline: none;
+    box-sizing: content-box;
+}
+.jqx-clear {
+    text-align:left; 
+    vertical-align:top;
+    left: 0px;
+    top: 0px;
+    appearance: none !important;
+    outline: none !important;
+    padding: 0px;
+    margin: 0px;
+}
+.jqx-popup {
+    box-sizing: content-box;
+}
+.jqx-position-reset {
+    position: static !important;
+}
+.jqx-border-reset {
+    border: none !important;
+}
+.jqx-overflow-hidden {
+    overflow: hidden !important;
+}
+.jqx-position-relative {
+    position: relative !important;
+}
+.jqx-position-absolute {
+    position: absolute !important;
+}
+.jqx-max-size {
+    width: 100% !important;
+    height: 100% !important;
+}
+.jqx-background-reset {
+    background: var(--jqx-bg-transparent) !important;
+}
+/*Disable browser selection*/
+.jqx-disableselect
+{
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select:none; /* IE 10+ */
+    -webkit-touch-callout:none; /* iOS Safari */
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* iOS Safari */
+}
+.jqx-enableselect {
+    user-select:all;
+    -webkit-user-select: text; /* Safari */
+    -ms-user-select:text; /* IE 10+ */
+}
+.jqx-hideborder
+{
+    border: none !important;
+}
+.jqx-hidescrollbars
+{
+    overflow: hidden !important;
+}
+/*jqxButton, jqxToggleButton, jqxRepeatButton Style*/
+.jqx-button{
+    outline: none;
+    border: 1px solid var(--jqx-fill-state-normal-border-color); /* Use theme variable */
+    background-color: var(--jqx-fill-state-normal-bg); /* Use theme variable */
+    color: var(--jqx-widget-color); /* Use theme variable */
+    padding: 0.375rem 0.75rem; /* Modern padding */
+    text-align: center;
+    vertical-align: middle; /* Changed from 'central' */
+    margin: 0; /* Reset margin */
+    cursor: pointer; /* Changed from 'default' */
+    border-radius: var(--jqx-border-radius); /* Apply border radius */
+    line-height: var(--jqx-line-height); /* Consistent line height */
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out; /* Smooth transitions */
+}
+button.jqx-button, input[type=button].jqx-button,  input[type=submit].jqx-button {
+    box-sizing: border-box !important;
+}
+.jqx-button:hover {
+    background-color: var(--jqx-fill-state-hover-bg);
+    border-color: var(--jqx-fill-state-hover-border-color);
+}
+.jqx-button.jqx-fill-state-pressed { /* Target pressed state specifically */
+    background-color: var(--jqx-fill-state-pressed-bg);
+    border-color: var(--jqx-fill-state-pressed-border-color);
+}
+.jqx-button.jqx-fill-state-disabled {
+    background-color: var(--jqx-fill-state-normal-bg); /* Or a specific disabled bg */
+    border-color: var(--jqx-fill-state-normal-border-color);
+    color: var(--jqx-color-text-disabled);
+    opacity: 0.65; /* Standard disabled opacity */
+    cursor: default;
+}
+
+
+.jqx-buttongroup{}
+.jqx-group-button-normal {
+    vertical-align: middle;
+    text-align: center;
+}
+/*applied to the link button's anchor element.*/
+.jqx-link
+{
+    text-decoration: none;
+    color: var(--jqx-color-text-link);
+}
+.jqx-link:hover {
+    text-decoration: underline;
+}
+
+
+/*shows elements.*/
+.jqx-visible
+{
+    display: block;
+}
+/*hides elements.*/
+.jqx-hidden
+{
+    display: none;
+}
+/* .jqx-widget, .jqx-widget-content, .jqx-widget-header, .jqx-fill-state-normal {
+    line-height: var(--jqx-line-height); Duplicated, already in .jqx-widget
+} */
+
+/*jqxGauge Style*/
+.jqx-gauge-label, .jqx-gauge-caption
+{
+    fill: var(--jqx-color-text-light);
+    color: var(--jqx-color-text-light);
+    font-size: var(--jqx-font-size-sm);
+    font-family: var(--jqx-font-family);
+}
+/*jqxChart Style*/
+.jqx-chart-axis-text,
+.jqx-chart-label-text,
+.jqx-chart-tooltip-text,
+.jqx-chart-legend-text
+{
+    fill: var(--jqx-color-text-light);
+    color: var(--jqx-color-text-light);
+    font-size: var(--jqx-font-size-sm);
+    font-family: var(--jqx-font-family);
+}
+.jqx-chart-axis-description
+{
+    fill: var(--jqx-color-text-lighter);
+    color: var(--jqx-color-text-lighter);
+    font-size: var(--jqx-font-size-sm);
+    font-family: var(--jqx-font-family);
+}
+.jqx-chart-title-text
+{
+    fill: var(--jqx-color-text); /* Changed from link color for general title */
+    color: var(--jqx-color-text);
+    font-size: 1.25rem; /* Larger title */
+    font-weight: 600; /* Semibold */
+    font-family: var(--jqx-font-family);
+}
+.jqx-chart-title-description
+{
+    fill: var(--jqx-color-text-light); /* Lighter for description */
+    color: var(--jqx-color-text-light);
+    font-size: 0.9rem;
+    font-weight: normal;
+    font-family: var(--jqx-font-family);
+}
+
+
+/*applied to the Grid's bottom-right area between the horizontal and vertical scrollbars.*/
+.jqx-grid-bottomright
+{
+   background-color: var(--jqx-fill-state-normal-bg); /* Consistent light bg */
+}
+
+ /*applied to the column's button.*/
+ .jqx-grid-column-menubutton {
+    /* border-style: solid; */ /* Handled by general .jqx-grid-column-menubutton if specific border is needed */
+    /* border-width: 0px 0px 0px 1px; */
+    /* border-color: var(--jqx-widget-header-border-color); */ /* Match header border */
+    background-image: url('images/menubutton.png'); /* Keep if using image */
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+    width: 16px; /* Example size */
+    height: 16px; /* Example size */
+ }
+.jqx-grid-column-menubutton-rtl {
+    /* border-width: 0px 1px 0px 0px; */
+}
+ /*applied to the column's sort button when the sort order is ascending.*/
+ .jqx-grid-column-sortascbutton {
+    border: none;
+    background-image: url('images/sortascbutton.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+ }
+ /*applied to the column's sort button when the sort order is descending.*/
+  .jqx-grid-column-sortdescbutton {
+    border: none;
+    background-image: url('images/sortdescbutton.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+ }
+  /*applied to the column's filter button.*/
+  .jqx-grid-column-filterbutton
+ {
+    border: none;
+    background-image: url('images/filter.png');
+    background-repeat: no-repeat;
+    background-position: center;
+ }
+  /*applied to the column's resize line.*/
+ .jqx-grid-column-resizeline {
+   border-right: 1px dotted var(--jqx-color-text-lighter);
+ }
+
+.jqx-grid-validation-label {
+    color: var(--jqx-color-text-white) !important;
+    background: var(--jqx-color-text-error) !important;
+    border: 1px solid var(--jqx-color-text-error) !important;
+}
+  .jqx-grid-validation-arrow-up
+ {
+    background-image: url('images/red_arrow_up.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+ }
+  .jqx-grid-validation-arrow-down
+ {
+    background-image: url('images/red_arrow_down.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+ }
+  /*applied to the column's resize start line.*/
+  .jqx-grid-column-resizestartline {
+   border-right: 1px solid var(--jqx-color-text); /* Darker for active resize */
+ }
+  /*applied to the sort ascending menu item in the Grid's Context Menu*/
+ .jqx-grid-sortasc-icon
+ {
+    background-image: url('images/sortasc.png');
+    background-repeat: no-repeat;
+    background-position: left center;
+    width: 16px;
+    height: 16px;
+    float: left;
+    margin-left: -4px;
+    margin-right: 4px;
+ }
+  /*applied to the sort ascending menu item in the Grid's Context Menu*/
+ .jqx-grid-sortdesc-icon
+ {
+    background-image: url('images/sortdesc.png');
+    background-repeat: no-repeat;
+    background-position: left center;
+    width: 16px;
+    height: 16px;
+    float: left;
+    margin-left: -4px;
+    margin-right: 4px;
+ }
+  /*applied to the grid menu's sort remove item/*/
+ .jqx-grid-sortremove-icon
+ {
+    background-image: url('images/sortremove.png');
+    background-repeat: no-repeat;
+    background-position: left center;
+    width: 16px;
+    height: 16px;
+    float: left;
+    margin-left: -4px;
+    margin-right: 4px;
+ }
+   /*applied to the grouping column's drag and drop item when the drop operation is allowed.*/
+ .jqx-grid-drag-icon
+ {
+    background-image: url('images/drag.png');
+    background-repeat: no-repeat;
+    background-position: left center;
+    width: 16px;
+    height: 16px;
+ }
+   /*applied to the grouping column's drag and drop item when the drop operation is not allowed.*/
+ .jqx-grid-dragcancel-icon
+ {
+    background-image: url('images/dragcancel.png');
+    background-repeat: no-repeat;
+    background-position: left center;
+    width: 16px;
+    height: 16px;
+ }
+ /*applied to the 'group by' menu item.*/
+ .jqx-grid-groupby-icon
+ {
+    background-repeat: no-repeat;
+    background-position: left center;
+    width: 16px;
+    height: 16px;
+    float: left;
+    margin-left: -4px;
+    margin-right: 4px;
+ }
+/*applied to the column anchor tags.*/
+ .jqx-grid-column-header a:link, .jqx-grid-column-header a:visited
+ {
+    display: block; /* Keep if links are block-level inside headers */
+    margin: 0; /* Reset margin if padding on header is sufficient */
+    color: inherit;
+    outline: 0 none;
+    text-decoration: none;
+    cursor: pointer;
+}
+.jqx-grid-toolbar a:link, .jqx-grid-toolbar a:visited {
+    margin: 4px; /* Keep as is, toolbar is separate */
+    line-height: 18px !important;
+    color: inherit;
+    outline: 0 none;
+    text-decoration: none;
+    cursor: pointer;
+}
+/*applied to the groups header area.*/
+ .jqx-grid-groups-header, .jqx-grid-toolbar, .jqx-scheduler-toolbar {
+    border-style: solid;
+    border-width: 0 0 1px 0; /* Bottom border only */
+    border-color: var(--jqx-widget-header-border-color); /* Match header border */
+    background-color: var(--jqx-widget-header-bg); /* Match header bg */
+    white-space: nowrap;
+    overflow: hidden;
+    text-align: left;
+    padding: 0.5rem 0.75rem; /* Consistent padding */
+    margin: 0px;
+ }
+/*applied to a grouping row.*/
+ .jqx-grid-groups-row {
+    font-weight:600; /* Semibold for group rows */
+    background-color: var(--jqx-fill-state-normal-bg); /* Light bg for group rows */
+    color: var(--jqx-color-text);
+    border-bottom: 1px solid var(--jqx-widget-content-border-color);
+    padding: 0.5rem 0.75rem; /* Consistent padding */
+    white-space: nowrap;
+    text-align: left;
+    /* top: 50%; margin-top: -8px; (Old centering, padding should handle better) */
+ }
+ /*applied to the row details.*/
+ .jqx-grid-groups-row-details {
+    font-weight: normal;
+ }
+ /*applied to a grouping column.*/
+ .jqx-grid-group-column
+ {
+    border: 1px solid var(--jqx-fill-state-normal-border-color); /* Keep for distinct group columns */
+    background-color: var(--jqx-fill-state-normal-bg);
+    padding: 0.375rem 0.625rem; /* Padding for group columns */
+    margin: 2px; /* Spacing around group columns */
+    border-radius: var(--jqx-border-radius);
+    white-space: nowrap;
+    font-weight: normal;
+    overflow: hidden;
+    text-align: left;
+ }
+ /*applied to the lines between the group columns.*/
+  .jqx-grid-group-column-line
+ {
+    background: var(--jqx-fill-state-normal-border-color);
+ }
+ /*applied to the drop line indicators displayed in the grouping header.*/
+  .jqx-grid-group-drag-line
+ {
+    background: #80be09; /* Keep this distinct color */
+ }
+ /*applied to the anchor tags inside a grouping column.*/
+ .jqx-grid-group-column  a:link,
+ .jqx-grid-group-column  a:visited {
+    display: block;
+    margin: 0;
+    outline: 0 none;
+    text-decoration: none;
+    cursor: pointer;
+    color: inherit;
+}
+
+/* Locked cell styling */
+.jqx-grid-cell-locked {
+    color: var(--jqx-color-text-disabled) !important;
+    background-color: #f8f9fa !important; /* Very light gray, almost like disabled input */
+    font-style: italic; /* Optional: to further indicate non-editable */
+}
+
+
+ /*applied to a grid cell that is part of a rows group.*/
+ .jqx-grid-group-cell{
+    /* Styles for group cells if they are different from regular data cells */
+    /* Often, they might share styles with .jqx-grid-groups-row or have specific indentation */
+    overflow: hidden;
+    position: absolute !important; /* Keep if required by jQWidgets for layout */
+    height: 100%;
+    background: var(--jqx-fill-state-normal-bg); /* Differentiate from data rows if needed */
+    padding-left: 1.5rem; /* Example indentation */
+ }
+
+/* Filtered column cell highlighting */
+ .jqx-grid-cell-filter {
+    background-color: #e6f7ff; /* Light blue highlight for filtered column cells */
+ }
+ .jqx-grid-cell-filter-alt {
+    background-color: #d9f2ff;
+ }
+
+/* Add new row styling */
+.jqx-grid-cell-add-new-row {
+    background: #f0fff0 !important; /* Light green for add new row */
+    color: var(--jqx-color-text) !important;
+    font-style: italic;
+}
+
+
+ /*applied to a grid cell that is part of a rows group. */
+.jqx-grid-group-cell, .jqx-grid-empty-cell { /* Empty cell is also part of this */
+    /* Original had:
+    border-style: solid;
+    border-width: 0px 0px 1px 0px;
+    white-space: nowrap;
+    font-weight: normal; */
+    /* If these need to be different from regular .jqx-grid-table .jqx-grid-cell, define here */
+    /* For modern look, ensure they align with the horizontal line style */
+    border-width: 0 0 1px 0 !important;
+    border-color: var(--jqx-widget-content-border-color) !important;
+ }
+.jqx-widget .jqx-grid-cleared-cell, .jqx-grid-cleared-cell { /* If cells are cleared, make them transparent */
+    background-color: var(--jqx-bg-transparent) !important;
+    border-color: var(--jqx-border-color-transparent) !important;
+}
+
+/* Tree Grid specific styles - keeping them as they are complex */
+.jqx-tree-grid-indent {
+    width: 14px;
+    display: inline-block;
+    height: 8px;
+    overflow: hidden;
+    vertical-align: top;
+}
+.jqx-tree-grid-title {
+    text-decoration: none;
+    vertical-align: top;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.jqx-tree-grid-collapse-button, .jqx-tree-grid-expand-button {
+    display: inline-block;
+    margin-top: 2px;
+    margin-right: 0px;
+    position: relative;
+    width: 14px;
+    height: 13px;
+    vertical-align: top;
+}
+.jqx-tree-grid-checkbox {
+   float: none !important;
+   width: 14px;
+   height: 14px;
+   cursor: pointer;
+   margin-right: 2px !important;
+   margin-left: 2px !important;
+}
+.jqx-tree-grid-icon {
+   float: none !important;
+   width: 14px;
+   height: 14px;
+   margin-right: 4px;
+}
+.jqx-tree-grid-icon-rtl {
+   margin-right: 0px;
+   margin-left: 4px;
+}
+.jqx-tree-grid-icon-size {
+   width: 14px;
+   height: 14px;
+   line-height: 16px;
+}
+
+.jqx-tree-grid-checkbox-tick {
+    width: 100%;
+    height: 100%;
+}
+.jqx-tree-grid-expand-button {
+    height: 10px;
+    width: 14px;
+    vertical-align: top;
+}
+
+/*applied to a cell in jqxDataTable*/
+.jqx-cell { /* This is a more generic cell, used by DataTable, distinct from jqx-grid-cell */
+    min-height: 23px; /* Original */
+    padding: 0.5rem 0.65rem; /* Modern padding */
+    margin: 0;
+    border-collapse: separate; /* DataTable might not use border-collapse on its table */
+    border-spacing: 0px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid var(--jqx-widget-content-border-color); /* Standard border */
+    border-top-width: 0px; /* If using horizontal lines from bottom border */
+    border-left-width: 0px; /* If wanting no vertical lines */
+    box-sizing: border-box;
+    white-space: normal;
+    line-height: var(--jqx-line-height);
+    background-color: var(--jqx-widget-content-bg);
+    color: var(--jqx-color-text);
+}
+.jqx-grid-cell-nowrap {white-space: nowrap;} /* This is specific to grid, keep */
+
+.jqx-cell-editor {
+    padding-left: 4px !important; /* Keep editor padding as is, might be specific */
+    padding-right: 3px !important;
+}
+.jqx-left-align { text-align: left; }
+.jqx-center-align { text-align: center; }
+.jqx-right-align { text-align: right; }
+.jqx-top-align { vertical-align:top; }
+.jqx-bottom-align { vertical-align: bottom; }
+
+
+.jqx-details table { /* Tables within row details */
+   border-collapse: collapse;
+   table-layout: fixed;
+   border-spacing: 0px;
+   width: 100%; /* Make detail tables full width */
+}
+.jqx-details table td, .jqx-details table th {
+    padding: 0.5rem 0.75rem; /* Consistent padding */
+    border: 1px solid var(--jqx-widget-content-border-color); /* Standard borders for detail table */
+}
+
+
+ /*applied to a grid cell that is part of a details row and grouping is enabled.*/
+.jqx-grid-group-details-cell {
+    /* Style if different, e.g., specific background or padding */
+ }
+ /*applied to a grid cell that is part of a details row.*/
+.jqx-grid-details-cell {
+    /* border-width: 0px 1px 0px 0px; Original, created a right border */
+    /* For modern look with horizontal lines only in details: */
+    border-width: 0 0 1px 0 !important;
+    border-color: var(--jqx-widget-content-border-color) !important;
+    background-color: #fdfdfd; /* Slightly off-white for details */
+ }
+
+  /*applied to a pinned grid cell.*/
+.jqx-grid-cell-pinned {
+    background-color: #f0f2f5; /* Subtle pinned background */
+    font-weight: 500; /* Slightly bolder for pinned columns */
+    /* Ensure pinned cells also follow the horizontal border style if part of the main table */
+    border-width: 0 0 1px 0 !important; /* Assuming they are part of the main table structure */
+    /* If pinned columns need a right visual separator: */
+    /* border-right: 1px solid var(--jqx-widget-header-border-color) !important; */
+ }
+ /*applied to a pinned grid cell. Represents the alternating cell background.*/
+.jqx-grid-cell-pinned-alt {
+    background-color: #e9edf0; /* Slightly different alt for pinned */
+ }
+
+  /*applied to the selection area.*/
+ .jqx-grid-selectionarea {
+    border: 1px solid var(--jqx-fill-state-focus-border-color); /* Use focus color for selection rubber band */
+    background-color: var(--jqx-fill-state-selected-bg); /* Light selected bg for area */
+    opacity: 0.5;
+ }
+
+  /*applied to a grid cell when the grid is empty.*/
+ .jqx-grid-empty-cell{
+    overflow: visible;
+    border-bottom: none !important; /* No border if grid is empty */
+    padding: 2rem 0.75rem !important; /* More padding for empty message */
+    text-align: center;
+    color: var(--jqx-color-text-lighter);
+  }
+
+ /*applied to the Grid when its loading the data.*/
+ .jqx-grid-load
+{
+    padding-right: 0px;
+    background-image: url(images/loader.gif);
+    background-position: center center; /* Center the loader */
+    background-repeat: no-repeat;
+    z-index: 9999;
+    display: block;
+    /* Add a semi-transparent overlay for better loading indication */
+    background-color: rgba(255, 255, 255, 0.7);
+}
+/*applied to a group's collapse button.*/
+.jqx-grid-group-collapse
+{
+    padding-right: 0px; /* Keep for image positioning */
+    background-image: url(images/icon-right.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    width: 16px; height: 16px; /* Ensure size if not set by image */
+}
+.jqx-grid-group-collapse-rtl
+{
+    padding-right: 0px;
+    background-image: url(images/icon-left.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+/*applied to a group's expand button.*/
+.jqx-grid-group-expand, .jqx-grid-group-expand-rtl
+{
+    padding-right: 0px;
+    background-image: url(images/icon-down.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+/* Other styles (ProgressBar, Menu, Tabs, etc.) would follow here. */
+/* For brevity, only including the revised grid styles and directly related elements. */
+/* Ensure to integrate this into your full CSS file, replacing the old grid styles. */
+
+/* ... (rest of your original CSS for other components) ... */
+
+/* Final check on global styles that might affect tables indirectly */
+.jqx-widget .jqx-grid-cell,
+.jqx-widget .jqx-grid-column-header,
+.jqx-widget .jqx-grid-group-cell {
+    /* Original had: border-color: var(--jqx-fill-state-normal-border-color); */
+    /* This might conflict. The more specific rules above should take precedence. */
+    /* If issues, comment this out or make it less specific. */
+}
+
+.jqx-widget .jqx-grid-column-menubutton,
+.jqx-widget .jqx-grid-column-sortascbutton,
+.jqx-widget .jqx-grid-column-sortdescbutton,
+.jqx-widget .jqx-grid-column-filterbutton
+{
+   background-color: var(--jqx-bg-transparent);
+   /* border-color: var(--jqx-fill-state-normal-border-color); -> Covered by specific icon rules */
+}
+
+/* Styles for specific button types (info, warning, success etc.) */
+/* These are good for general buttons, but the Aktif tag in your image is more like a badge. */
+.jqx-info, .jqx-warning, .jqx-success, .jqx-danger, .jqx-primary, .jqx-inverse {
+    /* ... (notification styles for buttons from previous response) ... */
+    padding: 0.375rem 0.75rem; /* Ensure consistent padding for these button types */
+    border-radius: var(--jqx-border-radius);
+    text-shadow: none; /* Modern buttons usually don't have text-shadow */
+}
+.jqx-info {
+  color: var(--jqx-notification-info-color)  !important;
+  background-color: var(--jqx-notification-info-bg)  !important;
+  background-image: linear-gradient(to bottom, var(--jqx-notification-info-bg-gradient-start), var(--jqx-notification-info-bg-gradient-end))  !important;
+  border: 1px solid var(--jqx-notification-info-border-color) !important;
+  border-bottom-color: var(--jqx-notification-info-border-bottom-color) !important; /* Keep for 3D effect if desired */
+}
+/* ... other .jqx-warning, .jqx-success etc. definitions ... */
