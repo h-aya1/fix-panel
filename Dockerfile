@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install npm dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source code and build assets
 COPY . .
@@ -21,25 +21,23 @@ RUN apk add --no-cache \
     git \
     curl \
     libpng-dev \
-    libonig-dev \
     libxml2-dev \
     zip \
     unzip \
-    sqlite \
-    sqlite-dev \
     freetype-dev \
     libjpeg-turbo-dev \
     libzip-dev \
     icu-dev \
     oniguruma-dev \
-    supervisor
+    sqlite-dev \
+    supervisor \
+    mysql-client
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
     pdo_mysql \
     pdo_sqlite \
-    sqlite3 \
     mbstring \
     exif \
     pcntl \
@@ -54,13 +52,18 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Create application directory
 WORKDIR /var/www/html
 
-# Copy composer files
-COPY composer.json composer.lock ./
+# Copy composer files and essential Laravel files
+COPY composer.json composer.lock artisan ./
+COPY app ./app
+COPY bootstrap ./bootstrap
+COPY config ./config
+COPY database ./database
+COPY routes ./routes
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
 
-# Copy application code
+# Copy remaining application code
 COPY . .
 
 # Copy built assets from node stage
