@@ -8,6 +8,7 @@ return [
     
     // Common CRUD operations
     'create' => '생성',
+    'refresh' => '새로고침',
     'edit' => '수정',
     'update' => '업데이트',
     'delete' => '삭제',

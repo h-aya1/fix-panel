@@ -38,6 +38,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/payrolls/bulk-delete', [App\Http\Controllers\PayrollController::class, 'bulkDelete'])->name('payrolls.bulk-delete');
     Route::post('/payrolls/import', [App\Http\Controllers\PayrollController::class, 'import'])->name('payrolls.import');
     Route::post('/payrolls/update-sms-status', [App\Http\Controllers\PayrollController::class, 'updateSmsStatus'])->name('payrolls.update-sms-status');
+    
+    // Employee Summary routes
+    Route::get('/employee-summaries', [App\Http\Controllers\EmployeeSummaryController::class, 'index'])->name('employee-summaries.index');
+    Route::get('/employee-summaries/import', [App\Http\Controllers\EmployeeSummaryController::class, 'importForm'])->name('employee-summaries.import.form');
+    Route::post('/employee-summaries/import', [App\Http\Controllers\EmployeeSummaryController::class, 'import'])->name('employee-summaries.import');
+    Route::delete('/employee-summaries/delete-all', [App\Http\Controllers\EmployeeSummaryController::class, 'deleteAll'])->name('employee-summaries.delete-all');
+    Route::get('/employee-summaries/stats', [App\Http\Controllers\EmployeeSummaryController::class, 'getImportStats'])->name('employee-summaries.stats');
+    Route::resource('employee-summaries', App\Http\Controllers\EmployeeSummaryController::class)->except(['index']);
 });
 
 // Language routes (accessible to all users)

@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('payrolls.index')" :active="request()->routeIs('payrolls.*')">
                         {{ __('Payrolls') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('employee-summaries.index')" :active="request()->routeIs('employee-summaries.*')">
+                        {{ __('Employee Summary') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -81,6 +84,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('payrolls.index')" :active="request()->routeIs('payrolls.*')">
                 {{ __('Payrolls') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('employee-summaries.index')" :active="request()->routeIs('employee-summaries.*')">
+                {{ __('Employee Summary') }}
             </x-responsive-nav-link>
         </div>
 

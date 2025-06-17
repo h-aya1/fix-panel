@@ -14,6 +14,7 @@ return [
     'save' => 'Save',
     'cancel' => 'Cancel',
     'create' => 'Create',
+    'refresh' => 'Refresh',
     'add_button' => 'Add',
     'update_button' => 'Update',
     'view_button' => 'View',
