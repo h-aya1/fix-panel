@@ -38,19 +38,44 @@ return [
     
     // Table headers
     'table' => [
+        'no' => 'No.',
         'employee_id' => 'Employee ID',
         'name' => 'Name',
         'company' => 'Company',
         'position' => 'Position',
         'age' => 'Age',
-        'work_days' => 'Work Days',
-        'base_salary' => 'Base Salary',
-        'total_earnings' => 'Total Earnings',
-        'total_deductions' => 'Total Deductions',
-        'net_payment' => 'Net Payment',
+        'resident_registration_number' => 'Resident Registration Number',
         'contact' => 'Contact',
         'join_date' => 'Join Date',
+        'work_days' => 'Work Days',
+        'base_salary' => 'Base Salary',
+        'qualification_allowance' => 'Qualification Allowance',
+        'position_allowance' => 'Position Allowance',
+        'duty_allowance' => 'Duty Allowance',
+        'overtime_allowance' => 'Overtime Allowance',
+        'holiday_work_allowance' => 'Holiday Work Allowance',
+        'night_shift_allowance' => 'Night Shift Allowance',
+        'bonus' => 'Bonus',
+        'adjustment_allowance' => 'Adjustment Allowance',
+        'transportation_allowance' => 'Transportation Allowance',
+        'meal_allowance' => 'Meal Allowance',
+        'labor_day_allowance' => 'Labor Day Allowance',
+        'paid_leave_allowance' => 'Paid Leave Allowance',
+        'welfare_allowance' => 'Welfare Allowance',
+        'other_allowances' => 'Other Allowances',
+        'total_earnings' => 'Total Earnings',
+        'health_insurance' => 'Health Insurance',
+        'long_term_care_insurance' => 'Long-term Care Insurance',
+        'employment_insurance' => 'Employment Insurance',
+        'national_pension' => 'National Pension',
+        'income_tax' => 'Income Tax',
+        'local_income_tax' => 'Local Income Tax',
+        'other_deductions' => 'Other Deductions',
+        'total_deductions' => 'Total Deductions',
+        'net_payment' => 'Net Payment',
+        'remarks' => 'Remarks',
         'imported_at' => 'Imported At',
+        'actions' => 'Actions',
     ],
     
     // Empty state
@@ -62,4 +87,18 @@ return [
     'created_successfully' => 'Employee summary created successfully!',
     'updated_successfully' => 'Employee summary updated successfully!',
     'deleted_successfully' => 'Employee summary deleted successfully!',
+    
+    // Filter
+    'filter' => [
+        'company' => 'Filter by Company',
+        'all_companies' => 'All Companies',
+        'apply_filter' => 'Apply Filter',
+        'clear_filter' => 'Clear Filter',
+    ],
+    
+    // Actions
+    'delete_row' => 'Delete',
+    'confirm_delete_row' => 'Are you sure you want to delete this record?',
+    'row_deleted' => 'Record deleted successfully!',
+    'delete_row_failed' => 'Failed to delete record',
 ];

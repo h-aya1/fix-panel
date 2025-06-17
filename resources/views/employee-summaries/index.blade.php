@@ -57,18 +57,42 @@ $(document).ready(function() {
         datatype: "json",
         datafields: [
             { name: 'id', type: 'number' },
+            { name: 'no', type: 'number' },
             { name: 'employee_id', type: 'string' },
             { name: 'name', type: 'string' },
             { name: 'company_name', type: 'string' },
             { name: 'position', type: 'string' },
             { name: 'age', type: 'number' },
-            { name: 'work_days', type: 'number' },
-            { name: 'base_salary', type: 'number' },
-            { name: 'total_earnings', type: 'number' },
-            { name: 'total_deductions', type: 'number' },
-            { name: 'net_payment', type: 'number' },
+            { name: 'resident_registration_number', type: 'string' },
             { name: 'contact_number', type: 'string' },
             { name: 'date_of_joining', type: 'date' },
+            { name: 'work_days', type: 'number' },
+            { name: 'base_salary', type: 'number' },
+            { name: 'qualification_allowance', type: 'number' },
+            { name: 'position_allowance', type: 'number' },
+            { name: 'duty_allowance', type: 'number' },
+            { name: 'overtime_allowance', type: 'number' },
+            { name: 'holiday_work_allowance', type: 'number' },
+            { name: 'night_shift_allowance', type: 'number' },
+            { name: 'bonus', type: 'number' },
+            { name: 'adjustment_allowance', type: 'number' },
+            { name: 'transportation_allowance', type: 'number' },
+            { name: 'meal_allowance', type: 'number' },
+            { name: 'labor_day_allowance', type: 'number' },
+            { name: 'paid_leave_allowance', type: 'number' },
+            { name: 'welfare_allowance', type: 'number' },
+            { name: 'other_allowances', type: 'number' },
+            { name: 'total_earnings', type: 'number' },
+            { name: 'health_insurance', type: 'number' },
+            { name: 'long_term_care_insurance', type: 'number' },
+            { name: 'employment_insurance', type: 'number' },
+            { name: 'national_pension', type: 'number' },
+            { name: 'income_tax', type: 'number' },
+            { name: 'local_income_tax', type: 'number' },
+            { name: 'other_deductions', type: 'number' },
+            { name: 'total_deductions', type: 'number' },
+            { name: 'net_payment', type: 'number' },
+            { name: 'remarks', type: 'string' },
             { name: 'imported_at', type: 'date' }
         ],
         localdata: summaryData
@@ -92,19 +116,57 @@ $(document).ready(function() {
         filterable: true,
         showfilterrow: true,
         columns: [
+            { text: '{{ __("employee_summary.table.no") }}', datafield: 'no', width: 60, cellsalign: 'center' },
             { text: '{{ __("employee_summary.table.employee_id") }}', datafield: 'employee_id', width: 100 },
             { text: '{{ __("employee_summary.table.name") }}', datafield: 'name', width: 120 },
             { text: '{{ __("employee_summary.table.company") }}', datafield: 'company_name', width: 120 },
             { text: '{{ __("employee_summary.table.position") }}', datafield: 'position', width: 100 },
             { text: '{{ __("employee_summary.table.age") }}', datafield: 'age', width: 60, cellsalign: 'center' },
-            { text: '{{ __("employee_summary.table.work_days") }}', datafield: 'work_days', width: 80, cellsalign: 'center' },
-            { text: '{{ __("employee_summary.table.base_salary") }}', datafield: 'base_salary', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.total_earnings") }}', datafield: 'total_earnings', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.total_deductions") }}', datafield: 'total_deductions', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.net_payment") }}', datafield: 'net_payment', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.resident_registration_number") }}', datafield: 'resident_registration_number', width: 150 },
             { text: '{{ __("employee_summary.table.contact") }}', datafield: 'contact_number', width: 120 },
             { text: '{{ __("employee_summary.table.join_date") }}', datafield: 'date_of_joining', width: 100, cellsalign: 'center', cellsformat: 'yyyy-MM-dd' },
-            { text: '{{ __("employee_summary.table.imported_at") }}', datafield: 'imported_at', width: 140, cellsalign: 'center', cellsformat: 'yyyy-MM-dd HH:mm' }
+            { text: '{{ __("employee_summary.table.work_days") }}', datafield: 'work_days', width: 80, cellsalign: 'center' },
+            { text: '{{ __("employee_summary.table.base_salary") }}', datafield: 'base_salary', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.qualification_allowance") }}', datafield: 'qualification_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.position_allowance") }}', datafield: 'position_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.duty_allowance") }}', datafield: 'duty_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.overtime_allowance") }}', datafield: 'overtime_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.holiday_work_allowance") }}', datafield: 'holiday_work_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.night_shift_allowance") }}', datafield: 'night_shift_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.bonus") }}', datafield: 'bonus', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.adjustment_allowance") }}', datafield: 'adjustment_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.transportation_allowance") }}', datafield: 'transportation_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.meal_allowance") }}', datafield: 'meal_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.labor_day_allowance") }}', datafield: 'labor_day_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.paid_leave_allowance") }}', datafield: 'paid_leave_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.welfare_allowance") }}', datafield: 'welfare_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.other_allowances") }}', datafield: 'other_allowances', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.total_earnings") }}', datafield: 'total_earnings', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.health_insurance") }}', datafield: 'health_insurance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.long_term_care_insurance") }}', datafield: 'long_term_care_insurance', width: 150, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.employment_insurance") }}', datafield: 'employment_insurance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.national_pension") }}', datafield: 'national_pension', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.income_tax") }}', datafield: 'income_tax', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.local_income_tax") }}', datafield: 'local_income_tax', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.other_deductions") }}', datafield: 'other_deductions', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.total_deductions") }}', datafield: 'total_deductions', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.net_payment") }}', datafield: 'net_payment', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+            { text: '{{ __("employee_summary.table.remarks") }}', datafield: 'remarks', width: 150 },
+            { text: '{{ __("employee_summary.table.imported_at") }}', datafield: 'imported_at', width: 140, cellsalign: 'center', cellsformat: 'yyyy-MM-dd HH:mm' },
+            { 
+                text: '{{ __("employee_summary.table.actions") }}', 
+                datafield: 'actions', 
+                width: 80, 
+                cellsalign: 'center',
+                columntype: 'button',
+                cellsrenderer: function () {
+                    return '{{ __("employee_summary.delete_row") }}';
+                },
+                buttonclick: function (row) {
+                    const rowData = $("#summaryGrid").jqxGrid('getrowdata', row);
+                    deleteRow(rowData.id);
+                }
+            }
         ]
     });
     
@@ -230,6 +292,7 @@ $(document).ready(function() {
                                             <th width="40px">
                                                 <input type="checkbox" id="masterCheckbox" class="form-check-input">
                                             </th>
+                                            <th>{{ __("employee_summary.table.no") }}</th>
                                             <th>{{ __("employee_summary.table.employee_id") }}</th>
                                             <th>{{ __("employee_summary.table.name") }}</th>
                                             <th>{{ __("employee_summary.table.company") }}</th>
@@ -237,7 +300,12 @@ $(document).ready(function() {
                                             <th>{{ __("employee_summary.table.age") }}</th>
                                             <th>{{ __("employee_summary.table.work_days") }}</th>
                                             <th>{{ __("employee_summary.table.base_salary") }}</th>
+                                            <th>{{ __("employee_summary.table.total_earnings") }}</th>
+                                            <th>{{ __("employee_summary.table.total_deductions") }}</th>
                                             <th>{{ __("employee_summary.table.net_payment") }}</th>
+                                            <th>{{ __("employee_summary.table.contact") }}</th>
+                                            <th>{{ __("employee_summary.table.join_date") }}</th>
+                                            <th>{{ __("employee_summary.table.remarks") }}</th>
                                         </tr>
                                     </thead>
                                     <tbody id="previewTableBody">
@@ -281,6 +349,7 @@ $(document).ready(function() {
                     <td>
                         <input type="checkbox" class="form-check-input row-checkbox" data-index="${index}" checked>
                     </td>
+                    <td>${row.no || ''}</td>
                     <td>${row.employee_id || ''}</td>
                     <td>${row.name || ''}</td>
                     <td>${row.company_name || ''}</td>
@@ -288,7 +357,12 @@ $(document).ready(function() {
                     <td>${row.age || ''}</td>
                     <td>${row.work_days || ''}</td>
                     <td>${row.base_salary ? Number(row.base_salary).toLocaleString() : ''}</td>
+                    <td>${row.total_earnings ? Number(row.total_earnings).toLocaleString() : ''}</td>
+                    <td>${row.total_deductions ? Number(row.total_deductions).toLocaleString() : ''}</td>
                     <td>${row.net_payment ? Number(row.net_payment).toLocaleString() : ''}</td>
+                    <td>${row.contact_number || ''}</td>
+                    <td>${row.date_of_joining || ''}</td>
+                    <td>${row.remarks || ''}</td>
                 </tr>
             `;
             tbody.append(tr);
@@ -412,6 +486,66 @@ $(document).ready(function() {
             }
         });
     }
+    
+    // Delete row functionality
+    function deleteRow(id) {
+        Swal.fire({
+            title: '{{ __("employee_summary.confirm_delete_row") }}',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '{{ __("app.delete") }}',
+            cancelButtonText: '{{ __("app.cancel") }}'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/employee-summaries/${id}`,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '{{ __("employee_summary.row_deleted") }}',
+                                timer: 2000
+                            });
+                            $("#summaryGrid").jqxGrid('deleterow', id);
+                        }
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || '{{ __("employee_summary.delete_row_failed") }}';
+                        Swal.fire({
+                            icon: 'error',
+                            title: '{{ __("app.error") }}',
+                            text: message
+                        });
+                    }
+                });
+            }
+        });
+    }
+    
+    // Company filter functionality
+    $('#companyFilter').on('change', function() {
+        const selectedCompany = $(this).val();
+        const url = new URL(window.location.href);
+        
+        if (selectedCompany) {
+            url.searchParams.set('company', selectedCompany);
+        } else {
+            url.searchParams.delete('company');
+        }
+        
+        window.location.href = url.toString();
+    });
+    
+    // Refresh data functionality
+    $('#refreshBtn').on('click', function() {
+        location.reload();
+    });
 });
 </script>
 @endsection
@@ -470,6 +604,18 @@ $(document).ready(function() {
     <div class="actions-bar">
         <div class="actions-bar-left">
             <span class="text-muted">{{ __('employee_summary.showing_records', ['count' => $summaries->count(), 'total' => $totalRecords]) }}</span>
+            
+            <!-- Company Filter -->
+            <div class="ms-3 d-inline-block">
+                <select id="companyFilter" class="form-select form-select-sm" style="width: 200px;">
+                    <option value="">{{ __('employee_summary.filter.all_companies') }}</option>
+                    @foreach($companies as $company)
+                        <option value="{{ $company }}" {{ request('company') == $company ? 'selected' : '' }}>
+                            {{ $company }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
         <div class="actions-bar-right">
             @if($totalRecords > 0)
@@ -477,7 +623,7 @@ $(document).ready(function() {
                 <i class="bx bx-trash me-1"></i>{{ __('employee_summary.delete_all') }}
             </button>
             @endif
-            <button type="button" class="btn btn-success btn-sm" onclick="location.reload()">
+            <button type="button" class="btn btn-success btn-sm" id="refreshBtn">
                 <i class="bx bx-refresh me-1"></i>{{ __('app.refresh') }}
             </button>
         </div>

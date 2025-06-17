@@ -16,15 +16,37 @@ class EmployeeSummaryController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $summaries = EmployeeSummary::orderBy('created_at', 'desc')->get();
+            $query = EmployeeSummary::query();
+            
+            // Apply company filter if provided
+            if ($request->has('company') && $request->company !== '') {
+                $query->where('company_name', $request->company);
+            }
+            
+            $summaries = $query->orderBy('created_at', 'desc')->get();
             return response()->json($summaries);
         }
 
-        $summaries = EmployeeSummary::orderBy('created_at', 'desc')->paginate(50);
+        $query = EmployeeSummary::query();
+        
+        // Apply company filter if provided
+        if ($request->has('company') && $request->company !== '') {
+            $query->where('company_name', $request->company);
+        }
+
+        $summaries = $query->orderBy('created_at', 'desc')->paginate(50);
         $totalRecords = EmployeeSummary::count();
         $latestImport = EmployeeSummary::latest('imported_at')->first();
         
-        return view('employee-summaries.index', compact('summaries', 'totalRecords', 'latestImport'));
+        // Get distinct companies for filter dropdown
+        $companies = EmployeeSummary::whereNotNull('company_name')
+                                   ->where('company_name', '!=', '')
+                                   ->distinct()
+                                   ->pluck('company_name')
+                                   ->sort()
+                                   ->values();
+        
+        return view('employee-summaries.index', compact('summaries', 'totalRecords', 'latestImport', 'companies'));
     }
 
     /**
@@ -193,18 +215,42 @@ class EmployeeSummaryController extends Controller
                 
                 $rowData = [
                     'row_index' => $index,
-                    'employee_id' => $row[0] ?? '',
-                    'name' => $row[1] ?? '',
+                    'no' => is_numeric($row[0] ?? '') ? (int)$row[0] : null,
+                    'employee_id' => $row[1] ?? '',
                     'company_name' => $row[2] ?? '',
                     'position' => $row[3] ?? '',
-                    'age' => is_numeric($row[4] ?? '') ? (int)$row[4] : null,
-                    'work_days' => is_numeric($row[5] ?? '') ? (int)$row[5] : null,
-                    'base_salary' => is_numeric($row[6] ?? '') ? (float)$row[6] : null,
-                    'total_earnings' => is_numeric($row[7] ?? '') ? (float)$row[7] : null,
-                    'total_deductions' => is_numeric($row[8] ?? '') ? (float)$row[8] : null,
-                    'net_payment' => is_numeric($row[9] ?? '') ? (float)$row[9] : null,
-                    'contact_number' => $row[10] ?? '',
-                    'date_of_joining' => $this->parseDate($row[11] ?? ''),
+                    'name' => $row[4] ?? '',
+                    'age' => is_numeric($row[5] ?? '') ? (int)$row[5] : null,
+                    'resident_registration_number' => $row[6] ?? '',
+                    'date_of_joining' => $this->parseDate($row[7] ?? ''),
+                    'contact_number' => $row[8] ?? '',
+                    'work_days' => is_numeric($row[9] ?? '') ? (int)$row[9] : null,
+                    'base_salary' => is_numeric($row[10] ?? '') ? (float)$row[10] : null,
+                    'qualification_allowance' => is_numeric($row[11] ?? '') ? (float)$row[11] : null,
+                    'position_allowance' => is_numeric($row[12] ?? '') ? (float)$row[12] : null,
+                    'duty_allowance' => is_numeric($row[13] ?? '') ? (float)$row[13] : null,
+                    'overtime_allowance' => is_numeric($row[14] ?? '') ? (float)$row[14] : null,
+                    'holiday_work_allowance' => is_numeric($row[15] ?? '') ? (float)$row[15] : null,
+                    'night_shift_allowance' => is_numeric($row[16] ?? '') ? (float)$row[16] : null,
+                    'bonus' => is_numeric($row[17] ?? '') ? (float)$row[17] : null,
+                    'adjustment_allowance' => is_numeric($row[18] ?? '') ? (float)$row[18] : null,
+                    'transportation_allowance' => is_numeric($row[19] ?? '') ? (float)$row[19] : null,
+                    'meal_allowance' => is_numeric($row[20] ?? '') ? (float)$row[20] : null,
+                    'labor_day_allowance' => is_numeric($row[21] ?? '') ? (float)$row[21] : null,
+                    'paid_leave_allowance' => is_numeric($row[22] ?? '') ? (float)$row[22] : null,
+                    'welfare_allowance' => is_numeric($row[23] ?? '') ? (float)$row[23] : null,
+                    'other_allowances' => is_numeric($row[24] ?? '') ? (float)$row[24] : null,
+                    'total_earnings' => is_numeric($row[25] ?? '') ? (float)$row[25] : null,
+                    'health_insurance' => is_numeric($row[26] ?? '') ? (float)$row[26] : null,
+                    'long_term_care_insurance' => is_numeric($row[27] ?? '') ? (float)$row[27] : null,
+                    'employment_insurance' => is_numeric($row[28] ?? '') ? (float)$row[28] : null,
+                    'national_pension' => is_numeric($row[29] ?? '') ? (float)$row[29] : null,
+                    'income_tax' => is_numeric($row[30] ?? '') ? (float)$row[30] : null,
+                    'local_income_tax' => is_numeric($row[31] ?? '') ? (float)$row[31] : null,
+                    'other_deductions' => is_numeric($row[32] ?? '') ? (float)$row[32] : null,
+                    'total_deductions' => is_numeric($row[33] ?? '') ? (float)$row[33] : null,
+                    'net_payment' => is_numeric($row[34] ?? '') ? (float)$row[34] : null,
+                    'remarks' => $row[35] ?? '',
                 ];
                 
                 $previewData[] = $rowData;
@@ -233,18 +279,42 @@ class EmployeeSummaryController extends Controller
     {
         $request->validate([
             'data' => 'required|array',
+            'data.*.no' => 'nullable|integer',
             'data.*.employee_id' => 'nullable|string|max:255',
             'data.*.name' => 'required|string|max:255',
             'data.*.company_name' => 'nullable|string|max:255',
             'data.*.position' => 'nullable|string|max:255',
             'data.*.age' => 'nullable|integer|min:0',
+            'data.*.resident_registration_number' => 'nullable|string|max:255',
+            'data.*.date_of_joining' => 'nullable|date',
+            'data.*.contact_number' => 'nullable|string|max:255',
             'data.*.work_days' => 'nullable|integer|min:0',
             'data.*.base_salary' => 'nullable|numeric|min:0',
+            'data.*.qualification_allowance' => 'nullable|numeric|min:0',
+            'data.*.position_allowance' => 'nullable|numeric|min:0',
+            'data.*.duty_allowance' => 'nullable|numeric|min:0',
+            'data.*.overtime_allowance' => 'nullable|numeric|min:0',
+            'data.*.holiday_work_allowance' => 'nullable|numeric|min:0',
+            'data.*.night_shift_allowance' => 'nullable|numeric|min:0',
+            'data.*.bonus' => 'nullable|numeric|min:0',
+            'data.*.adjustment_allowance' => 'nullable|numeric',
+            'data.*.transportation_allowance' => 'nullable|numeric|min:0',
+            'data.*.meal_allowance' => 'nullable|numeric|min:0',
+            'data.*.labor_day_allowance' => 'nullable|numeric|min:0',
+            'data.*.paid_leave_allowance' => 'nullable|numeric|min:0',
+            'data.*.welfare_allowance' => 'nullable|numeric|min:0',
+            'data.*.other_allowances' => 'nullable|numeric|min:0',
             'data.*.total_earnings' => 'nullable|numeric|min:0',
+            'data.*.health_insurance' => 'nullable|numeric|min:0',
+            'data.*.long_term_care_insurance' => 'nullable|numeric|min:0',
+            'data.*.employment_insurance' => 'nullable|numeric|min:0',
+            'data.*.national_pension' => 'nullable|numeric|min:0',
+            'data.*.income_tax' => 'nullable|numeric|min:0',
+            'data.*.local_income_tax' => 'nullable|numeric|min:0',
+            'data.*.other_deductions' => 'nullable|numeric|min:0',
             'data.*.total_deductions' => 'nullable|numeric|min:0',
             'data.*.net_payment' => 'nullable|numeric',
-            'data.*.contact_number' => 'nullable|string|max:255',
-            'data.*.date_of_joining' => 'nullable|date',
+            'data.*.remarks' => 'nullable|string',
         ]);
 
         try {
@@ -255,18 +325,42 @@ class EmployeeSummaryController extends Controller
 
             foreach ($request->data as $rowData) {
                 EmployeeSummary::create([
+                    'no' => $rowData['no'],
                     'employee_id' => $rowData['employee_id'],
                     'name' => $rowData['name'],
                     'company_name' => $rowData['company_name'],
                     'position' => $rowData['position'],
                     'age' => $rowData['age'],
+                    'resident_registration_number' => $rowData['resident_registration_number'],
+                    'date_of_joining' => $rowData['date_of_joining'],
+                    'contact_number' => $rowData['contact_number'],
                     'work_days' => $rowData['work_days'],
                     'base_salary' => $rowData['base_salary'],
+                    'qualification_allowance' => $rowData['qualification_allowance'],
+                    'position_allowance' => $rowData['position_allowance'],
+                    'duty_allowance' => $rowData['duty_allowance'],
+                    'overtime_allowance' => $rowData['overtime_allowance'],
+                    'holiday_work_allowance' => $rowData['holiday_work_allowance'],
+                    'night_shift_allowance' => $rowData['night_shift_allowance'],
+                    'bonus' => $rowData['bonus'],
+                    'adjustment_allowance' => $rowData['adjustment_allowance'],
+                    'transportation_allowance' => $rowData['transportation_allowance'],
+                    'meal_allowance' => $rowData['meal_allowance'],
+                    'labor_day_allowance' => $rowData['labor_day_allowance'],
+                    'paid_leave_allowance' => $rowData['paid_leave_allowance'],
+                    'welfare_allowance' => $rowData['welfare_allowance'],
+                    'other_allowances' => $rowData['other_allowances'],
                     'total_earnings' => $rowData['total_earnings'],
+                    'health_insurance' => $rowData['health_insurance'],
+                    'long_term_care_insurance' => $rowData['long_term_care_insurance'],
+                    'employment_insurance' => $rowData['employment_insurance'],
+                    'national_pension' => $rowData['national_pension'],
+                    'income_tax' => $rowData['income_tax'],
+                    'local_income_tax' => $rowData['local_income_tax'],
+                    'other_deductions' => $rowData['other_deductions'],
                     'total_deductions' => $rowData['total_deductions'],
                     'net_payment' => $rowData['net_payment'],
-                    'contact_number' => $rowData['contact_number'],
-                    'date_of_joining' => $rowData['date_of_joining'],
+                    'remarks' => $rowData['remarks'],
                     'import_batch' => $importBatch,
                     'imported_at' => now(),
                 ]);

@@ -45,9 +45,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/employee-summaries/import', [App\Http\Controllers\EmployeeSummaryController::class, 'import'])->name('employee-summaries.import');
     Route::post('/employee-summaries/preview', [App\Http\Controllers\EmployeeSummaryController::class, 'preview'])->name('employee-summaries.preview');
     Route::post('/employee-summaries/save-preview', [App\Http\Controllers\EmployeeSummaryController::class, 'savePreview'])->name('employee-summaries.save-preview');
+    Route::delete('/employee-summaries/{id}', [App\Http\Controllers\EmployeeSummaryController::class, 'destroy'])->name('employee-summaries.destroy');
     Route::delete('/employee-summaries/delete-all', [App\Http\Controllers\EmployeeSummaryController::class, 'deleteAll'])->name('employee-summaries.delete-all');
     Route::get('/employee-summaries/stats', [App\Http\Controllers\EmployeeSummaryController::class, 'getImportStats'])->name('employee-summaries.stats');
-    Route::resource('employee-summaries', App\Http\Controllers\EmployeeSummaryController::class)->except(['index']);
+    Route::resource('employee-summaries', App\Http\Controllers\EmployeeSummaryController::class)->except(['index', 'destroy']);
 });
 
 // Language routes (accessible to all users)
