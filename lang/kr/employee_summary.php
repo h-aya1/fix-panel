@@ -3,6 +3,7 @@
 return [
     'title' => '직원 요약',
     'import_description' => '직원 요약 Excel/CSV 파일을 업로드하세요.',
+    'drag_drop_hint' => '여기에 파일을 끌어다 놓거나 클릭하여 선택하세요',
     'select_file' => '파일 선택',
     'download_template' => '템플릿 다운로드',
     'importing' => '가져오는 중...',

@@ -3,6 +3,7 @@
 return [
     'title' => 'Employee Summary',
     'import_description' => 'Upload your Employee Summary Excel/CSV file here.',
+    'drag_drop_hint' => 'Drag and drop files here, or click to select',
     'select_file' => 'Select File',
     'download_template' => 'Download Template',
     'importing' => 'Importing...',

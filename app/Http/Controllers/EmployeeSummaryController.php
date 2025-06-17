@@ -239,7 +239,7 @@ class EmployeeSummaryController extends Controller
     public function preview(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
+            'file' => 'required|file|max:10240', // 10MB max
         ]);
 
         try {

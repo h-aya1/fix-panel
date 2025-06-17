@@ -17,10 +17,36 @@
     .stat-label { font-size: 0.875rem; color: #6c757d; margin-top: 0.25rem; }
     .actions-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; }
     .actions-bar .btn { font-size: 0.8rem; padding: 0.4rem 0.8rem; border-radius: 0.25rem; }
-    .import-area { border: 2px dashed #ced4da; padding: 30px 20px; text-align: center; margin-bottom: 1.5rem; background-color: #fff; border-radius: 0.3rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    /* Import Area - Enhanced for Drag & Drop */
+    .import-area { 
+        border: 2px dashed #ced4da; 
+        padding: 30px 20px; 
+        text-align: center; 
+        margin-bottom: 1.5rem; 
+        background-color: #fff; 
+        border-radius: 0.3rem; 
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .import-area:hover {
+        border-color: #0d6efd;
+        background-color: #f8f9ff;
+    }
+    .import-area.dragover {
+        border-color: #0d6efd;
+        background-color: #e7f1ff;
+        border-style: solid;
+    }
+    .import-area.dragging {
+        border-color: #198754;
+        background-color: #d4edda;
+        border-style: solid;
+    }
     .upload-icon { width: 40px; height: 40px; background-color: #e9ecef; margin: 0 auto 15px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #495057; }
     .upload-icon::before { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='currentColor' class='bi bi-cloud-arrow-up-fill' viewBox='0 0 16 16'%3E%3Cpath d='M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2z'/%3E%3C/svg%3E"); }
     #summaryGrid { width: 100%; height: 600px; border: 1px solid #dee2e6; border-radius: 0.25rem; }
+    .grid-container { min-height: 600px; } /* Ensure container always exists */
     .empty-state { text-align: center; padding-top: 5rem; padding-bottom: 5rem; }
     
     /* Preview Modal Styles */
@@ -248,84 +274,169 @@ $(document).ready(function() {
     
     const dataAdapter = new $.jqx.dataAdapter(source);
     
-    // Grid initialization
-    $("#summaryGrid").jqxGrid({
-        width: '100%',
-        source: dataAdapter,
-        theme: 'bootstrap',
-        pageable: true,
-        pagesize: 50,
-        pagesizeoptions: ['25', '50', '100'],
-        sortable: true,
-        altrows: true,
-        enabletooltips: true,
-        editable: false,
-        selectionmode: 'multiplerowsextended',
-        filterable: true,
-        showfilterrow: true,
-        columns: [
-            { text: '{{ __("employee_summary.table.no") }}', datafield: 'no', width: 60, cellsalign: 'center' },
-            { text: '{{ __("employee_summary.table.employee_id") }}', datafield: 'employee_id', width: 100 },
-            { text: '{{ __("employee_summary.table.name") }}', datafield: 'name', width: 120 },
-            { text: '{{ __("employee_summary.table.company") }}', datafield: 'company_name', width: 120 },
-            { text: '{{ __("employee_summary.table.position") }}', datafield: 'position', width: 100 },
-            { text: '{{ __("employee_summary.table.age") }}', datafield: 'age', width: 60, cellsalign: 'center' },
-            { text: '{{ __("employee_summary.table.resident_registration_number") }}', datafield: 'resident_registration_number', width: 150 },
-            { text: '{{ __("employee_summary.table.contact") }}', datafield: 'contact_number', width: 120 },
-            { text: '{{ __("employee_summary.table.join_date") }}', datafield: 'date_of_joining', width: 100, cellsalign: 'center', cellsformat: 'yyyy-MM-dd' },
-            { text: '{{ __("employee_summary.employment_duration") }}', datafield: 'employment_duration', width: 120, cellsalign: 'center' },
-            { text: '{{ __("employee_summary.table.work_days") }}', datafield: 'work_days', width: 80, cellsalign: 'center' },
-            { text: '{{ __("employee_summary.table.base_salary") }}', datafield: 'base_salary', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.qualification_allowance") }}', datafield: 'qualification_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.position_allowance") }}', datafield: 'position_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.duty_allowance") }}', datafield: 'duty_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.overtime_allowance") }}', datafield: 'overtime_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.holiday_work_allowance") }}', datafield: 'holiday_work_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.night_shift_allowance") }}', datafield: 'night_shift_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.bonus") }}', datafield: 'bonus', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.adjustment_allowance") }}', datafield: 'adjustment_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.transportation_allowance") }}', datafield: 'transportation_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.meal_allowance") }}', datafield: 'meal_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.labor_day_allowance") }}', datafield: 'labor_day_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.paid_leave_allowance") }}', datafield: 'paid_leave_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.welfare_allowance") }}', datafield: 'welfare_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.other_allowances") }}', datafield: 'other_allowances', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.total_earnings") }}', datafield: 'total_earnings', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.health_insurance") }}', datafield: 'health_insurance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.long_term_care_insurance") }}', datafield: 'long_term_care_insurance', width: 150, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.employment_insurance") }}', datafield: 'employment_insurance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.national_pension") }}', datafield: 'national_pension', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.income_tax") }}', datafield: 'income_tax', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.local_income_tax") }}', datafield: 'local_income_tax', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.other_deductions") }}', datafield: 'other_deductions', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.total_deductions") }}', datafield: 'total_deductions', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.net_payment") }}', datafield: 'net_payment', width: 120, cellsalign: 'right', cellsformat: 'n0' },
-            { text: '{{ __("employee_summary.table.remarks") }}', datafield: 'remarks', width: 150 },
-            { text: '{{ __("employee_summary.table.imported_at") }}', datafield: 'imported_at', width: 140, cellsalign: 'center', cellsformat: 'yyyy-MM-dd HH:mm' },
-            { 
-                text: '{{ __("employee_summary.table.actions") }}', 
-                datafield: 'actions', 
-                width: 150, 
-                cellsalign: 'center',
+    // Function to initialize or update the grid
+    function initializeGrid() {
+        const gridExists = $("#summaryGrid").hasClass('jqx-grid');
+        
+        if ($("#summaryGrid").length > 0 && !gridExists) {
+            // Grid initialization - only if element exists and hasn't been initialized
+            $("#summaryGrid").jqxGrid({
+                width: '100%',
+                source: dataAdapter,
+                theme: 'bootstrap',
+                pageable: true,
+                pagesize: 50,
+                pagesizeoptions: ['25', '50', '100'],
+                sortable: true,
+                altrows: true,
+                enabletooltips: true,
                 editable: false,
-                sortable: false,
-                filterable: false,
-                cellsrenderer: function (row, columnfield, value, defaulthtml, columnproperties, rowdata) {
-                    // Use rowdata.uid for jqxGrid's internal row id
-                    return `
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewDetail(${rowdata.id})" title="{{ __('employee_summary.view_detail') }}">
-                                <i class="bx bx-show"></i>
-                            </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteRow(${rowdata.id}, '${rowdata.uid}')" title="{{ __('employee_summary.delete_row') }}">
-                                <i class="bx bx-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        ]
+                selectionmode: 'multiplerowsextended',
+                filterable: true,
+                showfilterrow: true,
+                columns: [
+                    { text: '{{ __("employee_summary.table.no") }}', datafield: 'no', width: 60, cellsalign: 'center' },
+                    { text: '{{ __("employee_summary.table.employee_id") }}', datafield: 'employee_id', width: 100 },
+                    { text: '{{ __("employee_summary.table.name") }}', datafield: 'name', width: 120 },
+                    { text: '{{ __("employee_summary.table.company") }}', datafield: 'company_name', width: 120 },
+                    { text: '{{ __("employee_summary.table.position") }}', datafield: 'position', width: 100 },
+                    { text: '{{ __("employee_summary.table.age") }}', datafield: 'age', width: 60, cellsalign: 'center' },
+                    { text: '{{ __("employee_summary.table.resident_registration_number") }}', datafield: 'resident_registration_number', width: 150 },
+                    { text: '{{ __("employee_summary.table.contact") }}', datafield: 'contact_number', width: 120 },
+                    { text: '{{ __("employee_summary.table.join_date") }}', datafield: 'date_of_joining', width: 100, cellsalign: 'center', cellsformat: 'yyyy-MM-dd' },
+                    { text: '{{ __("employee_summary.employment_duration") }}', datafield: 'employment_duration', width: 120, cellsalign: 'center' },
+                    { text: '{{ __("employee_summary.table.work_days") }}', datafield: 'work_days', width: 80, cellsalign: 'center' },
+                    { text: '{{ __("employee_summary.table.base_salary") }}', datafield: 'base_salary', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.qualification_allowance") }}', datafield: 'qualification_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.position_allowance") }}', datafield: 'position_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.duty_allowance") }}', datafield: 'duty_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.overtime_allowance") }}', datafield: 'overtime_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.holiday_work_allowance") }}', datafield: 'holiday_work_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.night_shift_allowance") }}', datafield: 'night_shift_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.bonus") }}', datafield: 'bonus', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.adjustment_allowance") }}', datafield: 'adjustment_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.transportation_allowance") }}', datafield: 'transportation_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.meal_allowance") }}', datafield: 'meal_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.labor_day_allowance") }}', datafield: 'labor_day_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.paid_leave_allowance") }}', datafield: 'paid_leave_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.welfare_allowance") }}', datafield: 'welfare_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.other_allowances") }}', datafield: 'other_allowances', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.total_earnings") }}', datafield: 'total_earnings', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.health_insurance") }}', datafield: 'health_insurance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.long_term_care_insurance") }}', datafield: 'long_term_care_insurance', width: 150, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.employment_insurance") }}', datafield: 'employment_insurance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.national_pension") }}', datafield: 'national_pension', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.income_tax") }}', datafield: 'income_tax', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.local_income_tax") }}', datafield: 'local_income_tax', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.other_deductions") }}', datafield: 'other_deductions', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.total_deductions") }}', datafield: 'total_deductions', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.net_payment") }}', datafield: 'net_payment', width: 120, cellsalign: 'right', cellsformat: 'n0' },
+                    { text: '{{ __("employee_summary.table.remarks") }}', datafield: 'remarks', width: 150 },
+                    { text: '{{ __("employee_summary.table.imported_at") }}', datafield: 'imported_at', width: 140, cellsalign: 'center', cellsformat: 'yyyy-MM-dd HH:mm' },
+                    { 
+                        text: '{{ __("employee_summary.table.actions") }}', 
+                        datafield: 'actions', 
+                        width: 150, 
+                        cellsalign: 'center',
+                        editable: false,
+                        sortable: false,
+                        filterable: false,
+                        cellsrenderer: function (row, columnfield, value, defaulthtml, columnproperties, rowdata) {
+                            // Use rowdata.uid for jqxGrid's internal row id
+                            return `
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewDetail(${rowdata.id})" title="{{ __('employee_summary.view_detail') }}">
+                                        <i class="bx bx-show"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteRow(${rowdata.id}, '${rowdata.uid}')" title="{{ __('employee_summary.delete_row') }}">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                ]
+            });
+        } else if ($("#summaryGrid").length > 0 && gridExists) {
+            // Update existing grid
+            $("#summaryGrid").jqxGrid({ source: dataAdapter });
+        }
+        
+        // Show/hide grid and empty state
+        if (summaryData.length > 0) {
+            $("#summaryGrid").show();
+            $("#emptyState").hide();
+        } else {
+            $("#summaryGrid").hide();
+            $("#emptyState").show();
+        }
+    }
+    
+    // Initialize grid on page load
+    initializeGrid();
+    
+    // Drag and Drop functionality for import area
+    const importArea = document.getElementById('importArea');
+    const importText = document.getElementById('importText');
+    const importFileInput = document.getElementById('importFile');
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        importArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
     });
+    
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        importArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        importArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    // Handle dropped files
+    importArea.addEventListener('drop', handleDrop, false);
+    
+    // Click to open file dialog
+    importArea.addEventListener('click', function() {
+        importFileInput.click();
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function highlight(e) {
+        importArea.classList.add('dragover');
+        importText.textContent = '{{ __("employee_summary.release_to_upload") }}';
+    }
+    
+    function unhighlight(e) {
+        importArea.classList.remove('dragover');
+        importText.textContent = '{{ __("employee_summary.import_description") }}';
+    }
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.includes('sheet') || file.type.includes('csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                importFileInput.files = files;
+                // Trigger the change event manually
+                $(importFileInput).trigger('change');
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ __("app.error") }}',
+                    text: '{{ __("employee_summary.invalid_file_type") }}'
+                });
+            }
+        }
+    }
     
     // Import functionality with preview
     $('#importFile').on('change', function(event) {
@@ -630,9 +741,18 @@ $(document).ready(function() {
                         timer: 3000
                     });
                     
-                    // Close modal and reload page
+                    // Close modal and refresh grid without page reload
                     $('#previewModal').modal('hide');
-                    setTimeout(() => location.reload(), 3000);
+                    
+                    // Update summaryData with new imported data
+                    if (response.data && Array.isArray(response.data)) {
+                        summaryData.push(...response.data);
+                        source.localdata = summaryData;
+                        initializeGrid(); // Re-initialize grid with new data
+                    } else {
+                        // Fallback: reload page if data structure is unexpected
+                        setTimeout(() => location.reload(), 3000);
+                    }
                 }
             },
             error: function(xhr) {
@@ -1000,17 +1120,20 @@ $(document).ready(function() {
         </div>
     </div>
 
-    <!-- Import Area -->
-    <div class="import-area">
+    <!-- Import Area with Drag & Drop -->
+    <div class="import-area" id="importArea">
         <div class="upload-icon"></div>
-        <p>{{ __('employee_summary.import_description') }}</p>
+        <p id="importText">{{ __('employee_summary.import_description') }}</p>
         <input type="file" id="importFile" accept=".xlsx,.xls,.csv" style="display: none;" />
-        <button type="button" class="btn btn-primary btn-sm mt-2 me-2" onclick="document.getElementById('importFile').click();">
+        <button type="button" class="btn btn-primary btn-sm mt-2 me-2">
             <i class="bx bx-file-find me-1"></i>{{ __('employee_summary.select_file') }}
         </button>
         <a href="{{ asset('templates/employee_summary_template.xlsx') }}" class="btn btn-outline-secondary btn-sm mt-2" download>
             <i class="bx bx-download me-1"></i>{{ __('employee_summary.download_template') }}
         </a>
+        <div class="mt-2 text-muted small">
+            <i class="bx bx-info-circle me-1"></i>{{ __('employee_summary.drag_drop_hint') }}
+        </div>
     </div>
 
     <!-- Actions Bar -->
@@ -1042,21 +1165,22 @@ $(document).ready(function() {
         </div>
     </div>
 
-    <!-- Data Grid -->
-    @if($totalRecords > 0)
-        <div id="summaryGrid" class="mt-3"></div>
-    @else
-        <div class="empty-state">
-            <div class="mb-4">
-                <i class="bx bx-file-blank" style="font-size: 4rem; color: #6c757d;"></i>
+    <!-- Data Grid Container - Always present -->
+    <div class="grid-container">
+        <div id="summaryGrid" class="mt-3" style="@if($totalRecords == 0) display: none; @endif"></div>
+        @if($totalRecords == 0)
+            <div id="emptyState" class="empty-state">
+                <div class="mb-4">
+                    <i class="bx bx-file-blank" style="font-size: 4rem; color: #6c757d;"></i>
+                </div>
+                <h5 class="text-muted mb-3">{{ __('employee_summary.no_records') }}</h5>
+                <p class="text-muted mb-4">{{ __('employee_summary.no_records_description') }}</p>
+                <button class="btn btn-primary" onclick="document.getElementById('importFile').click();">
+                    <i class="bx bx-upload me-2"></i>{{ __('employee_summary.import_first_file') }}
+                </button>
             </div>
-            <h5 class="text-muted mb-3">{{ __('employee_summary.no_records') }}</h5>
-            <p class="text-muted mb-4">{{ __('employee_summary.no_records_description') }}</p>
-            <button class="btn btn-primary" onclick="document.getElementById('importFile').click();">
-                <i class="bx bx-upload me-2"></i>{{ __('employee_summary.import_first_file') }}
-            </button>
-        </div>
-    @endif
+        @endif
+    </div>
 
 </div>
 
