@@ -121,4 +121,8 @@ return [
     'no_records' => 'No Records Found',
     'no_records_description' => 'Start by importing your first employee summary file.',
     'import_first_file' => 'Import Your First File',
+    
+    // New sections for detail view
+    'summary' => 'Summary',
+    'remarks_placeholder' => 'Enter any additional remarks or notes...',
 ];

@@ -33,4 +33,9 @@ return [
     'upload' => '업로드',
     'download' => '다운로드',
     'preview' => '미리보기',
+    'close' => '닫기',
+    'saving' => '저장 중...',
+    'saved' => '저장됨',
+    'save_failed' => '저장에 실패했습니다. 다시 시도해주세요.',
+    'please_wait' => '잠시만 기다려주세요...',
 ];

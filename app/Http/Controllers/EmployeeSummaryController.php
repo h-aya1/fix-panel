@@ -130,11 +130,39 @@ class EmployeeSummaryController extends Controller
             'position' => 'nullable|string|max:255',
             'age' => 'nullable|integer|min:0',
             'contact_number' => 'nullable|string|max:255',
+            'date_of_joining' => 'nullable|date',
+            'work_days' => 'nullable|integer|min:0|max:31',
             'base_salary' => 'nullable|numeric|min:0',
-            // Add other validation rules as needed
+            'qualification_allowance' => 'nullable|numeric|min:0',
+            'position_allowance' => 'nullable|numeric|min:0',
+            'duty_allowance' => 'nullable|numeric|min:0',
+            'overtime_allowance' => 'nullable|numeric|min:0',
+            'holiday_work_allowance' => 'nullable|numeric|min:0',
+            'night_shift_allowance' => 'nullable|numeric|min:0',
+            'bonus' => 'nullable|numeric|min:0',
+            'adjustment_allowance' => 'nullable|numeric|min:0',
+            'transportation_allowance' => 'nullable|numeric|min:0',
+            'meal_allowance' => 'nullable|numeric|min:0',
+            'labor_day_allowance' => 'nullable|numeric|min:0',
+            'paid_leave_allowance' => 'nullable|numeric|min:0',
+            'welfare_allowance' => 'nullable|numeric|min:0',
+            'other_allowances' => 'nullable|numeric|min:0',
+            'remarks' => 'nullable|string',
         ]);
 
         $employeeSummary->update($validated);
+        
+        // Recalculate totals after update
+        $employeeSummary->calculateTotals();
+        $employeeSummary->save();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => __('employee_summary.updated_successfully'),
+                'data' => $employeeSummary->fresh()
+            ]);
+        }
 
         return redirect()->route('employee-summaries.index')
                         ->with('success', __('employee_summary.updated_successfully'));

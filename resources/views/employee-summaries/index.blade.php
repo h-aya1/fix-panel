@@ -34,8 +34,8 @@
     #detailSidebar {
         position: fixed;
         top: 0;
-        right: -500px;
-        width: 500px;
+        right: -600px;
+        width: 600px;
         height: 100vh;
         background: white;
         box-shadow: -2px 0 10px rgba(0,0,0,0.1);
@@ -50,20 +50,76 @@
         padding: 1.5rem;
         border-bottom: 1px solid #e9ecef;
         background: #f8f9fa;
+        position: relative;
     }
     .sidebar-content {
+        padding: 0;
+    }
+    
+    /* Tab Styles */
+    .sidebar-tabs {
+        border-bottom: 1px solid #e9ecef;
+    }
+    .sidebar-tab-nav {
+        display: flex;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .sidebar-tab-nav li {
+        flex: 1;
+    }
+    .sidebar-tab-nav a {
+        display: block;
+        padding: 1rem;
+        text-decoration: none;
+        color: #6c757d;
+        font-weight: 500;
+        text-align: center;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s ease;
+    }
+    .sidebar-tab-nav a:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+    .sidebar-tab-nav a.active {
+        color: #0d6efd;
+        border-bottom-color: #0d6efd;
+        background: white;
+    }
+    
+    .tab-content {
+        display: none;
         padding: 1.5rem;
     }
-    .sidebar-section {
-        margin-bottom: 2rem;
+    .tab-content.active {
+        display: block;
     }
-    .sidebar-section h6 {
-        color: #0d6efd;
-        border-bottom: 2px solid #e9ecef;
-        padding-bottom: 0.5rem;
+    
+    /* Form Styles */
+    .form-row {
         margin-bottom: 1rem;
     }
-    .sidebar-row {
+    .form-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+    .form-control-sm {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+    }
+    .form-control:disabled {
+        background-color: #f8f9fa;
+        opacity: 1;
+    }
+    
+    /* Display Mode Styles */
+    .display-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -71,20 +127,21 @@
         padding: 0.5rem 0;
         border-bottom: 1px solid #f8f9fa;
     }
-    .sidebar-label {
+    .display-label {
         font-weight: 600;
         color: #555;
         font-size: 0.875rem;
     }
-    .sidebar-value {
+    .display-value {
         color: #333;
         font-size: 0.875rem;
         text-align: right;
     }
-    .sidebar-value.currency {
+    .display-value.currency {
         color: #198754;
         font-weight: 600;
     }
+    
     .duration-badge-sidebar {
         background-color: #e7f3ff;
         color: #0066cc;
@@ -93,6 +150,17 @@
         font-size: 0.75rem;
         font-weight: 500;
     }
+    
+    /* Action Buttons */
+    .sidebar-actions {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e9ecef;
+        background: #f8f9fa;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+    
     .close-sidebar {
         position: absolute;
         top: 1rem;
@@ -102,6 +170,7 @@
         font-size: 1.5rem;
         color: #6c757d;
         cursor: pointer;
+        z-index: 10;
     }
     .close-sidebar:hover {
         color: #495057;
@@ -659,46 +728,217 @@ $(document).ready(function() {
     // Close detail sidebar
     window.closeDetailSidebar = function() {
         $('#detailSidebar').removeClass('show');
+        // Reset to view mode when closing
+        setEditMode(false);
     };
+    
+    // Tab switching functionality
+    window.switchTab = function(tabId) {
+        // Remove active class from all tabs and content
+        $('.sidebar-tab-nav a').removeClass('active');
+        $('.tab-content').removeClass('active');
+        
+        // Add active class to clicked tab and corresponding content
+        $(`a[href="#${tabId}"]`).addClass('active');
+        $(`#${tabId}`).addClass('active');
+    };
+    
+    // Edit mode functionality
+    let isEditMode = false;
+    let currentEmployeeData = null;
+    
+    window.toggleEditMode = function() {
+        setEditMode(!isEditMode);
+    };
+    
+    function setEditMode(editMode) {
+        isEditMode = editMode;
+        
+        if (editMode) {
+            // Switch to edit mode - show form inputs
+            $('.display-content').hide();
+            $('.edit-content').show();
+            $('#editBtn').text('{{ __("app.cancel") }}').removeClass('btn-primary').addClass('btn-secondary');
+            $('#saveBtn').show();
+        } else {
+            // Switch to view mode - show display values
+            $('.edit-content').hide();
+            $('.display-content').show();
+            $('#editBtn').text('{{ __("app.edit") }}').removeClass('btn-secondary').addClass('btn-primary');
+            $('#saveBtn').hide();
+            
+            // Reset form values to original data
+            if (currentEmployeeData) {
+                populateEditForm(currentEmployeeData);
+            }
+        }
+    }
+    
+    // Save functionality
+    window.saveEmployee = function() {
+        const formData = getFormData();
+        
+        Swal.fire({
+            title: '{{ __("app.saving") }}',
+            text: '{{ __("app.please_wait") }}',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        $.ajax({
+            url: `/employee-summaries/${currentEmployeeData.id}`,
+            type: 'PUT',
+            data: formData,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '{{ __("app.saved") }}',
+                        text: response.message,
+                        timer: 2000
+                    });
+                    
+                    // Update current data and refresh display
+                    currentEmployeeData = response.data;
+                    populateDetailSidebar(currentEmployeeData);
+                    setEditMode(false);
+                    
+                    // Refresh the grid
+                    location.reload();
+                }
+            },
+            error: function(xhr) {
+                const message = xhr.responseJSON?.message || '{{ __("app.save_failed") }}';
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ __("app.error") }}',
+                    text: message
+                });
+            }
+        });
+    };
+    
+    function getFormData() {
+        return {
+            employee_id: $('#edit_employee_id').val(),
+            name: $('#edit_name').val(),
+            company_name: $('#edit_company_name').val(),
+            position: $('#edit_position').val(),
+            age: $('#edit_age').val(),
+            contact_number: $('#edit_contact_number').val(),
+            date_of_joining: $('#edit_date_of_joining').val(),
+            work_days: $('#edit_work_days').val(),
+            base_salary: $('#edit_base_salary').val(),
+            qualification_allowance: $('#edit_qualification_allowance').val(),
+            position_allowance: $('#edit_position_allowance').val(),
+            duty_allowance: $('#edit_duty_allowance').val(),
+            overtime_allowance: $('#edit_overtime_allowance').val(),
+            holiday_work_allowance: $('#edit_holiday_work_allowance').val(),
+            night_shift_allowance: $('#edit_night_shift_allowance').val(),
+            bonus: $('#edit_bonus').val(),
+            adjustment_allowance: $('#edit_adjustment_allowance').val(),
+            transportation_allowance: $('#edit_transportation_allowance').val(),
+            meal_allowance: $('#edit_meal_allowance').val(),
+            labor_day_allowance: $('#edit_labor_day_allowance').val(),
+            paid_leave_allowance: $('#edit_paid_leave_allowance').val(),
+            welfare_allowance: $('#edit_welfare_allowance').val(),
+            other_allowances: $('#edit_other_allowances').val(),
+            remarks: $('#edit_remarks').val()
+        };
+    }
+    
+    function populateEditForm(employee) {
+        $('#edit_employee_id').val(employee.employee_id);
+        $('#edit_name').val(employee.name);
+        $('#edit_company_name').val(employee.company_name);
+        $('#edit_position').val(employee.position);
+        $('#edit_age').val(employee.age);
+        $('#edit_contact_number').val(employee.contact_number);
+        $('#edit_date_of_joining').val(employee.date_of_joining);
+        $('#edit_work_days').val(employee.work_days);
+        $('#edit_base_salary').val(employee.base_salary);
+        $('#edit_qualification_allowance').val(employee.qualification_allowance);
+        $('#edit_position_allowance').val(employee.position_allowance);
+        $('#edit_duty_allowance').val(employee.duty_allowance);
+        $('#edit_overtime_allowance').val(employee.overtime_allowance);
+        $('#edit_holiday_work_allowance').val(employee.holiday_work_allowance);
+        $('#edit_night_shift_allowance').val(employee.night_shift_allowance);
+        $('#edit_bonus').val(employee.bonus);
+        $('#edit_adjustment_allowance').val(employee.adjustment_allowance);
+        $('#edit_transportation_allowance').val(employee.transportation_allowance);
+        $('#edit_meal_allowance').val(employee.meal_allowance);
+        $('#edit_labor_day_allowance').val(employee.labor_day_allowance);
+        $('#edit_paid_leave_allowance').val(employee.paid_leave_allowance);
+        $('#edit_welfare_allowance').val(employee.welfare_allowance);
+        $('#edit_other_allowances').val(employee.other_allowances);
+        $('#edit_remarks').val(employee.remarks);
+    }
 
     // END: >>>>> CORRECTED FUNCTIONS <<<<<
 
     
     // Populate detail sidebar with employee data (this can remain a local function)
     function populateDetailSidebar(employee) {
+        currentEmployeeData = employee;
+        
         const formatNumber = (num) => num ? Number(num).toLocaleString() : '-';
         
+        // Header information
         $('#detailEmployeeName').text(employee.name || '-');
         $('#detailEmployeeId').text(employee.employee_id || '-');
-        $('#detailCompany').text(employee.company_name || '-');
-        $('#detailPosition').text(employee.position || '-');
-        $('#detailAge').text(employee.age || '-');
-        $('#detailContact').text(employee.contact_number || '-');
-        $('#detailJoinDate').text(employee.date_of_joining ? new Date(employee.date_of_joining).toLocaleDateString() : '-');
-        $('#detailDuration').text(employee.employment_duration || '-');
-        $('#detailWorkDays').text(employee.work_days || '-');
-        $('#detailBaseSalary').text(formatNumber(employee.base_salary));
+        
+        // Basic Info Tab - Display mode
+        $('#display_company').text(employee.company_name || '-');
+        $('#display_position').text(employee.position || '-');
+        $('#display_age').text(employee.age || '-');
+        $('#display_contact').text(employee.contact_number || '-');
+        $('#display_join_date').text(employee.date_of_joining ? new Date(employee.date_of_joining).toLocaleDateString() : '-');
+        $('#display_duration').text(employee.employment_duration || '-');
+        
+        // Salary Info Tab - Display mode
+        $('#display_work_days').text(employee.work_days || '-');
+        $('#display_base_salary').text(formatNumber(employee.base_salary));
+        $('#display_qualification_allowance').text(formatNumber(employee.qualification_allowance));
+        $('#display_position_allowance').text(formatNumber(employee.position_allowance));
+        $('#display_duty_allowance').text(formatNumber(employee.duty_allowance));
+        $('#display_overtime_allowance').text(formatNumber(employee.overtime_allowance));
+        $('#display_holiday_work_allowance').text(formatNumber(employee.holiday_work_allowance));
+        $('#display_night_shift_allowance').text(formatNumber(employee.night_shift_allowance));
+        $('#display_bonus').text(formatNumber(employee.bonus));
+        $('#display_adjustment_allowance').text(formatNumber(employee.adjustment_allowance));
+        $('#display_transportation_allowance').text(formatNumber(employee.transportation_allowance));
+        $('#display_meal_allowance').text(formatNumber(employee.meal_allowance));
+        $('#display_labor_day_allowance').text(formatNumber(employee.labor_day_allowance));
+        $('#display_paid_leave_allowance').text(formatNumber(employee.paid_leave_allowance));
+        $('#display_welfare_allowance').text(formatNumber(employee.welfare_allowance));
+        $('#display_other_allowances').text(formatNumber(employee.other_allowances));
+        
+        // Other tabs (display only)
         $('#detailTotalEarnings').text(formatNumber(employee.total_earnings));
         $('#detailTotalDeductions').text(formatNumber(employee.total_deductions));
-        $('#detailNetPayment').html(`<strong>${formatNumber(employee.net_payment)}</strong>`);
-        $('#detailRemarks').text(employee.remarks || '-');
-        
-        // Allowances
-        $('#detailQualificationAllowance').text(formatNumber(employee.qualification_allowance));
-        $('#detailPositionAllowance').text(formatNumber(employee.position_allowance));
-        $('#detailDutyAllowance').text(formatNumber(employee.duty_allowance));
-        $('#detailOvertimeAllowance').text(formatNumber(employee.overtime_allowance));
-        $('#detailHolidayAllowance').text(formatNumber(employee.holiday_work_allowance));
-        $('#detailNightShiftAllowance').text(formatNumber(employee.night_shift_allowance));
-        $('#detailBonus').text(formatNumber(employee.bonus));
-        $('#detailTransportationAllowance').text(formatNumber(employee.transportation_allowance));
-        $('#detailMealAllowance').text(formatNumber(employee.meal_allowance));
-        
-        // Deductions
+        $('#detailNetPayment').text(formatNumber(employee.net_payment));
         $('#detailHealthInsurance').text(formatNumber(employee.health_insurance));
+        $('#detailLongTermCareInsurance').text(formatNumber(employee.long_term_care_insurance));
         $('#detailEmploymentInsurance').text(formatNumber(employee.employment_insurance));
         $('#detailNationalPension').text(formatNumber(employee.national_pension));
         $('#detailIncomeTax').text(formatNumber(employee.income_tax));
+        $('#detailLocalIncomeTax').text(formatNumber(employee.local_income_tax));
+        $('#detailOtherDeductions').text(formatNumber(employee.other_deductions));
+        $('#detailRemarks').text(employee.remarks || '-');
+        
+        // Populate edit form
+        populateEditForm(employee);
+        
+        // Reset to view mode
+        setEditMode(false);
+        
+        // Show first tab
+        switchTab('basicInfoTab');
     }
     
     // Company filter functionality
@@ -832,139 +1072,305 @@ $(document).ready(function() {
         </div>
     </div>
     
+    <!-- Tab Navigation -->
+    <div class="sidebar-tabs">
+        <ul class="sidebar-tab-nav">
+            <li><a href="#basicInfoTab" class="active" onclick="switchTab('basicInfoTab')">{{ __('employee_summary.basic_info') }}</a></li>
+            <li><a href="#salaryInfoTab" onclick="switchTab('salaryInfoTab')">{{ __('employee_summary.salary_info') }}</a></li>
+            <li><a href="#deductionsTab" onclick="switchTab('deductionsTab')">{{ __('employee_summary.deductions') }}</a></li>
+            <li><a href="#summaryTab" onclick="switchTab('summaryTab')">{{ __('employee_summary.summary') }}</a></li>
+        </ul>
+    </div>
+    
     <div class="sidebar-content">
-        <!-- Basic Information -->
-        <div class="sidebar-section">
-            <h6><i class="bx bx-user me-2"></i>{{ __('employee_summary.basic_info') }}</h6>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.company') }}:</div>
-                <div class="sidebar-value" id="detailCompany">-</div>
+        <!-- Basic Info Tab -->
+        <div id="basicInfoTab" class="tab-content active">
+            <!-- Display Mode -->
+            <div class="display-content">
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.company') }}:</div>
+                    <div class="display-value" id="display_company">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.position') }}:</div>
+                    <div class="display-value" id="display_position">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.age') }}:</div>
+                    <div class="display-value" id="display_age">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.contact') }}:</div>
+                    <div class="display-value" id="display_contact">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.join_date') }}:</div>
+                    <div class="display-value" id="display_join_date">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.employment_duration') }}:</div>
+                    <div class="display-value">
+                        <span class="duration-badge-sidebar" id="display_duration">-</span>
+                    </div>
+                </div>
             </div>
             
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.position') }}:</div>
-                <div class="sidebar-value" id="detailPosition">-</div>
-            </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.age') }}:</div>
-                <div class="sidebar-value" id="detailAge">-</div>
-            </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.contact') }}:</div>
-                <div class="sidebar-value" id="detailContact">-</div>
-            </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.join_date') }}:</div>
-                <div class="sidebar-value" id="detailJoinDate">-</div>
-            </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.employment_duration') }}:</div>
-                <div class="sidebar-value">
-                    <span class="duration-badge-sidebar" id="detailDuration">-</span>
+            <!-- Edit Mode -->
+            <div class="edit-content" style="display: none;">
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.employee_id') }}</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_employee_id" readonly>
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.name') }}</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_name">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.company') }}</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_company_name">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.position') }}</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_position">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.age') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_age" min="18" max="100">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.contact') }}</label>
+                    <input type="text" class="form-control form-control-sm" id="edit_contact_number">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.join_date') }}</label>
+                    <input type="date" class="form-control form-control-sm" id="edit_date_of_joining">
                 </div>
             </div>
         </div>
-
-        <!-- Salary Summary -->
-        <div class="sidebar-section">
-            <h6><i class="bx bx-money me-2"></i>{{ __('employee_summary.salary_info') }}</h6>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.work_days') }}:</div>
-                <div class="sidebar-value" id="detailWorkDays">-</div>
+        
+        <!-- Salary Info Tab -->
+        <div id="salaryInfoTab" class="tab-content">
+            <!-- Display Mode -->
+            <div class="display-content">
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.work_days') }}:</div>
+                    <div class="display-value" id="display_work_days">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.base_salary') }}:</div>
+                    <div class="display-value currency" id="display_base_salary">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.qualification_allowance') }}:</div>
+                    <div class="display-value currency" id="display_qualification_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.position_allowance') }}:</div>
+                    <div class="display-value currency" id="display_position_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.duty_allowance') }}:</div>
+                    <div class="display-value currency" id="display_duty_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.overtime_allowance') }}:</div>
+                    <div class="display-value currency" id="display_overtime_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.holiday_work_allowance') }}:</div>
+                    <div class="display-value currency" id="display_holiday_work_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.night_shift_allowance') }}:</div>
+                    <div class="display-value currency" id="display_night_shift_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.bonus') }}:</div>
+                    <div class="display-value currency" id="display_bonus">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.adjustment_allowance') }}:</div>
+                    <div class="display-value currency" id="display_adjustment_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.transportation_allowance') }}:</div>
+                    <div class="display-value currency" id="display_transportation_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.meal_allowance') }}:</div>
+                    <div class="display-value currency" id="display_meal_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.labor_day_allowance') }}:</div>
+                    <div class="display-value currency" id="display_labor_day_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.paid_leave_allowance') }}:</div>
+                    <div class="display-value currency" id="display_paid_leave_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.welfare_allowance') }}:</div>
+                    <div class="display-value currency" id="display_welfare_allowance">-</div>
+                </div>
+                <div class="display-row">
+                    <div class="display-label">{{ __('employee_summary.table.other_allowances') }}:</div>
+                    <div class="display-value currency" id="display_other_allowances">-</div>
+                </div>
             </div>
             
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.base_salary') }}:</div>
-                <div class="sidebar-value currency" id="detailBaseSalary">-</div>
-            </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.total_earnings') }}:</div>
-                <div class="sidebar-value currency" id="detailTotalEarnings">-</div>
-            </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.total_deductions') }}:</div>
-                <div class="sidebar-value currency" id="detailTotalDeductions">-</div>
-            </div>
-            
-            <div class="sidebar-row" style="border-top: 2px solid #e9ecef; margin-top: 0.5rem; padding-top: 0.75rem;">
-                <div class="sidebar-label"><strong>{{ __('employee_summary.table.net_payment') }}:</strong></div>
-                <div class="sidebar-value currency" id="detailNetPayment"><strong>-</strong></div>
+            <!-- Edit Mode -->
+            <div class="edit-content" style="display: none;">
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.work_days') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_work_days" min="0" max="31">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.base_salary') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_base_salary" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.qualification_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_qualification_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.position_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_position_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.duty_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_duty_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.overtime_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_overtime_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.holiday_work_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_holiday_work_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.night_shift_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_night_shift_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.bonus') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_bonus" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.adjustment_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_adjustment_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.transportation_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_transportation_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.meal_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_meal_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.labor_day_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_labor_day_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.paid_leave_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_paid_leave_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.welfare_allowance') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_welfare_allowance" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.other_allowances') }}</label>
+                    <input type="number" class="form-control form-control-sm" id="edit_other_allowances" min="0" step="1000">
+                </div>
+                <div class="form-row">
+                    <label class="form-label">{{ __('employee_summary.table.remarks') }}</label>
+                    <textarea class="form-control form-control-sm" id="edit_remarks" rows="3" placeholder="{{ __('employee_summary.remarks_placeholder') }}"></textarea>
+                </div>
             </div>
         </div>
-
-        <!-- Key Allowances -->
-        <div class="sidebar-section">
-            <h6><i class="bx bx-plus-circle me-2"></i>{{ __('employee_summary.allowances') }}</h6>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.qualification_allowance') }}:</div>
-                <div class="sidebar-value currency" id="detailQualificationAllowance">-</div>
+        
+        <!-- Deductions Tab -->
+        <div id="deductionsTab" class="tab-content">
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.health_insurance') }}:</div>
+                <div class="display-value currency" id="detailHealthInsurance">-</div>
             </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.position_allowance') }}:</div>
-                <div class="sidebar-value currency" id="detailPositionAllowance">-</div>
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.long_term_care_insurance') }}:</div>
+                <div class="display-value currency" id="detailLongTermCareInsurance">-</div>
             </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.overtime_allowance') }}:</div>
-                <div class="sidebar-value currency" id="detailOvertimeAllowance">-</div>
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.employment_insurance') }}:</div>
+                <div class="display-value currency" id="detailEmploymentInsurance">-</div>
             </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.bonus') }}:</div>
-                <div class="sidebar-value currency" id="detailBonus">-</div>
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.national_pension') }}:</div>
+                <div class="display-value currency" id="detailNationalPension">-</div>
             </div>
-        </div>
-
-        <!-- Key Deductions -->
-        <div class="sidebar-section">
-            <h6><i class="bx bx-minus-circle me-2"></i>{{ __('employee_summary.deductions') }}</h6>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.health_insurance') }}:</div>
-                <div class="sidebar-value currency" id="detailHealthInsurance">-</div>
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.income_tax') }}:</div>
+                <div class="display-value currency" id="detailIncomeTax">-</div>
             </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.national_pension') }}:</div>
-                <div class="sidebar-value currency" id="detailNationalPension">-</div>
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.local_income_tax') }}:</div>
+                <div class="display-value currency" id="detailLocalIncomeTax">-</div>
             </div>
-            
-            <div class="sidebar-row">
-                <div class="sidebar-label">{{ __('employee_summary.table.income_tax') }}:</div>
-                <div class="sidebar-value currency" id="detailIncomeTax">-</div>
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.other_deductions') }}:</div>
+                <div class="display-value currency" id="detailOtherDeductions">-</div>
             </div>
         </div>
+        
+        <!-- Summary Tab -->
+        <div id="summaryTab" class="tab-content">
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.total_earnings') }}:</div>
+                <div class="display-value currency" id="detailTotalEarnings">-</div>
+            </div>
+            <div class="display-row">
+                <div class="display-label">{{ __('employee_summary.table.total_deductions') }}:</div>
+                <div class="display-value currency" id="detailTotalDeductions">-</div>
+            </div>
+            <div class="display-row" style="border-top: 2px solid #e9ecef; margin-top: 0.5rem; padding-top: 0.75rem;">
+                <div class="display-label"><strong>{{ __('employee_summary.table.net_payment') }}:</strong></div>
+                <div class="display-value currency" id="detailNetPayment"><strong>-</strong></div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <h6><i class="bx bx-note me-2"></i>{{ __('employee_summary.table.remarks') }}</h6>
+                <div class="display-value" id="detailRemarks" style="text-align: left; margin-top: 0.5rem;">-</div>
+            </div>
+            
+            <!-- Placeholder Sections -->
+            <div style="margin-top: 2rem;">
+                <h6><i class="bx bx-line-chart me-2"></i>{{ __('employee_summary.salary_records') }}</h6>
+                <div class="text-muted text-center py-3">
+                    {{ __('employee_summary.no_salary_records') }}
+                </div>
+            </div>
 
-        <!-- Remarks -->
-        <div class="sidebar-section">
-            <h6><i class="bx bx-note me-2"></i>{{ __('employee_summary.table.remarks') }}</h6>
-            <div class="sidebar-value" id="detailRemarks">-</div>
-        </div>
-
-        <!-- Placeholder Sections -->
-        <div class="sidebar-section">
-            <h6><i class="bx bx-line-chart me-2"></i>{{ __('employee_summary.salary_records') }}</h6>
-            <div class="text-muted text-center py-3">
-                {{ __('employee_summary.no_salary_records') }}
+            <div style="margin-top: 2rem;">
+                <h6><i class="bx bx-calendar-check me-2"></i>{{ __('employee_summary.attendance_leave') }}</h6>
+                <div class="text-muted text-center py-3">
+                    {{ __('employee_summary.no_attendance_records') }}
+                </div>
             </div>
         </div>
-
-        <div class="sidebar-section">
-            <h6><i class="bx bx-calendar-check me-2"></i>{{ __('employee_summary.attendance_leave') }}</h6>
-            <div class="text-muted text-center py-3">
-                {{ __('employee_summary.no_attendance_records') }}
-            </div>
-        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="sidebar-actions">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeDetailSidebar()">
+            <i class="bx bx-x me-1"></i>{{ __('app.close') }}
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" id="editBtn" onclick="toggleEditMode()">
+            <i class="bx bx-edit me-1"></i>{{ __('app.edit') }}
+        </button>
+        <button type="button" class="btn btn-success btn-sm" id="saveBtn" onclick="saveEmployee()" style="display: none;">
+            <i class="bx bx-save me-1"></i>{{ __('app.save') }}
+        </button>
     </div>
 </div>
 

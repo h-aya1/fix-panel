@@ -33,4 +33,9 @@ return [
     'confirm_bulk_delete' => 'Confirm Bulk Delete',
     'no_selection' => 'No Selection',
     'preview' => 'Preview',
+    'close' => 'Close',
+    'saving' => 'Saving...',
+    'saved' => 'Saved',
+    'save_failed' => 'Save failed. Please try again.',
+    'please_wait' => 'Please wait...',
 ];

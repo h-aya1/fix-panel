@@ -116,4 +116,8 @@ return [
     'created_successfully' => '직원 요약이 성공적으로 생성되었습니다!',
     'updated_successfully' => '직원 요약이 성공적으로 업데이트되었습니다!',
     'deleted_successfully' => '직원 요약이 성공적으로 삭제되었습니다!',
+    
+    // New sections for detail view
+    'summary' => '요약',
+    'remarks_placeholder' => '추가 비고나 메모를 입력하세요...',
 ];

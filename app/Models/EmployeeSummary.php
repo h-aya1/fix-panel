@@ -137,4 +137,43 @@ class EmployeeSummary extends Model
             return null;
         }
     }
+    
+    /**
+     * Calculate total earnings and deductions
+     */
+    public function calculateTotals()
+    {
+        // Calculate total earnings
+        $this->total_earnings = collect([
+            $this->base_salary,
+            $this->qualification_allowance,
+            $this->position_allowance,
+            $this->duty_allowance,
+            $this->overtime_allowance,
+            $this->holiday_work_allowance,
+            $this->night_shift_allowance,
+            $this->bonus,
+            $this->adjustment_allowance,
+            $this->transportation_allowance,
+            $this->meal_allowance,
+            $this->labor_day_allowance,
+            $this->paid_leave_allowance,
+            $this->welfare_allowance,
+            $this->other_allowances,
+        ])->filter()->sum();
+        
+        // Calculate total deductions
+        $this->total_deductions = collect([
+            $this->health_insurance,
+            $this->long_term_care_insurance,
+            $this->employment_insurance,
+            $this->national_pension,
+            $this->income_tax,
+            $this->local_income_tax,
+            $this->other_deductions,
+        ])->filter()->sum();
+        
+        // Calculate net payment
+        $this->net_payment = $this->total_earnings - $this->total_deductions;
+    }
 }
