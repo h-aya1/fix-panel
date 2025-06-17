@@ -5,10 +5,11 @@ namespace App\Imports;
 use App\Models\EmployeeSummary;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\ToArray;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-class EmployeeSummaryImport implements ToModel, WithHeadingRow
+class EmployeeSummaryImport implements ToModel, WithHeadingRow, ToArray
 {
     private $importBatch;
 
@@ -79,6 +80,14 @@ class EmployeeSummaryImport implements ToModel, WithHeadingRow
     public function getImportBatch()
     {
         return $this->importBatch;
+    }
+
+    /**
+     * Convert to array for preview functionality.
+     */
+    public function array(array $array)
+    {
+        return $array;
     }
 
     private function parseString($value)
