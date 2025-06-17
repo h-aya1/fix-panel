@@ -14,6 +14,7 @@ return [
     'delete' => '삭제',
     'save' => '저장',
     'cancel' => '취소',
+    'back' => '뒤로',
     'save_button' => '저장',
     'cancel_button' => '취소',
     'confirm' => '확인',

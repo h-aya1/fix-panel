@@ -29,6 +29,83 @@
     #previewModal .table td { font-size: 0.875rem; vertical-align: middle; }
     #previewModal .table-responsive { border: 1px solid #dee2e6; border-radius: 0.375rem; }
     #selectionCount { font-size: 0.875rem; }
+    
+    /* Detail Sidebar Styles */
+    #detailSidebar {
+        position: fixed;
+        top: 0;
+        right: -500px;
+        width: 500px;
+        height: 100vh;
+        background: white;
+        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        z-index: 1050;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+    }
+    #detailSidebar.show {
+        right: 0;
+    }
+    .sidebar-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        background: #f8f9fa;
+    }
+    .sidebar-content {
+        padding: 1.5rem;
+    }
+    .sidebar-section {
+        margin-bottom: 2rem;
+    }
+    .sidebar-section h6 {
+        color: #0d6efd;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .sidebar-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+    .sidebar-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.875rem;
+    }
+    .sidebar-value {
+        color: #333;
+        font-size: 0.875rem;
+        text-align: right;
+    }
+    .sidebar-value.currency {
+        color: #198754;
+        font-weight: 600;
+    }
+    .duration-badge-sidebar {
+        background-color: #e7f3ff;
+        color: #0066cc;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .close-sidebar {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6c757d;
+        cursor: pointer;
+    }
+    .close-sidebar:hover {
+        color: #495057;
+    }
 </style>
 @endsection
 
@@ -66,6 +143,7 @@ $(document).ready(function() {
             { name: 'resident_registration_number', type: 'string' },
             { name: 'contact_number', type: 'string' },
             { name: 'date_of_joining', type: 'date' },
+            { name: 'employment_duration', type: 'string' },
             { name: 'work_days', type: 'number' },
             { name: 'base_salary', type: 'number' },
             { name: 'qualification_allowance', type: 'number' },
@@ -125,6 +203,7 @@ $(document).ready(function() {
             { text: '{{ __("employee_summary.table.resident_registration_number") }}', datafield: 'resident_registration_number', width: 150 },
             { text: '{{ __("employee_summary.table.contact") }}', datafield: 'contact_number', width: 120 },
             { text: '{{ __("employee_summary.table.join_date") }}', datafield: 'date_of_joining', width: 100, cellsalign: 'center', cellsformat: 'yyyy-MM-dd' },
+            { text: '{{ __("employee_summary.employment_duration") }}', datafield: 'employment_duration', width: 120, cellsalign: 'center' },
             { text: '{{ __("employee_summary.table.work_days") }}', datafield: 'work_days', width: 80, cellsalign: 'center' },
             { text: '{{ __("employee_summary.table.base_salary") }}', datafield: 'base_salary', width: 120, cellsalign: 'right', cellsformat: 'n0' },
             { text: '{{ __("employee_summary.table.qualification_allowance") }}', datafield: 'qualification_allowance', width: 120, cellsalign: 'right', cellsformat: 'n0' },
@@ -156,15 +235,22 @@ $(document).ready(function() {
             { 
                 text: '{{ __("employee_summary.table.actions") }}', 
                 datafield: 'actions', 
-                width: 80, 
+                width: 150, 
                 cellsalign: 'center',
-                columntype: 'button',
-                cellsrenderer: function () {
-                    return '{{ __("employee_summary.delete_row") }}';
-                },
-                buttonclick: function (row) {
-                    const rowData = $("#summaryGrid").jqxGrid('getrowdata', row);
-                    deleteRow(rowData.id);
+                editable: false,
+                sortable: false,
+                filterable: false,
+                cellsrenderer: function (row, columnfield, value, defaulthtml, columnproperties, rowdata) {
+                    return `
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewDetail(${rowdata.id})" title="{{ __('employee_summary.view_detail') }}">
+                                <i class="bx bx-show"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteRow(${rowdata.id})" title="{{ __('employee_summary.delete_row') }}">
+                                <i class="bx bx-trash"></i>
+                            </button>
+                        </div>
+                    `;
                 }
             }
         ]
@@ -305,6 +391,7 @@ $(document).ready(function() {
                                             <th>{{ __("employee_summary.table.net_payment") }}</th>
                                             <th>{{ __("employee_summary.table.contact") }}</th>
                                             <th>{{ __("employee_summary.table.join_date") }}</th>
+                                            <th>{{ __("employee_summary.employment_duration") }}</th>
                                             <th>{{ __("employee_summary.table.remarks") }}</th>
                                         </tr>
                                     </thead>
@@ -362,6 +449,7 @@ $(document).ready(function() {
                     <td>${row.net_payment ? Number(row.net_payment).toLocaleString() : ''}</td>
                     <td>${row.contact_number || ''}</td>
                     <td>${row.date_of_joining || ''}</td>
+                    <td>-</td>
                     <td>${row.remarks || ''}</td>
                 </tr>
             `;
@@ -528,6 +616,72 @@ $(document).ready(function() {
         });
     }
     
+    // View detail functionality
+    function viewDetail(id) {
+        // Load employee details via AJAX
+        $.ajax({
+            url: `/employee-summaries/${id}`,
+            type: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                if (response.success) {
+                    populateDetailSidebar(response.data);
+                    $('#detailSidebar').addClass('show');
+                }
+            },
+            error: function(xhr) {
+                console.error('Error loading employee details:', xhr);
+                Swal.fire({
+                    icon: 'error',
+                    title: '{{ __("app.error") }}',
+                    text: 'Failed to load employee details'
+                });
+            }
+        });
+    }
+    
+    // Populate detail sidebar with employee data
+    function populateDetailSidebar(employee) {
+        $('#detailEmployeeName').text(employee.name || '-');
+        $('#detailEmployeeId').text(employee.employee_id || '-');
+        $('#detailCompany').text(employee.company_name || '-');
+        $('#detailPosition').text(employee.position || '-');
+        $('#detailAge').text(employee.age || '-');
+        $('#detailContact').text(employee.contact_number || '-');
+        $('#detailJoinDate').text(employee.date_of_joining ? new Date(employee.date_of_joining).toLocaleDateString() : '-');
+        $('#detailDuration').text(employee.employment_duration || '-');
+        $('#detailWorkDays').text(employee.work_days || '-');
+        $('#detailBaseSalary').text(employee.base_salary ? Number(employee.base_salary).toLocaleString() : '-');
+        $('#detailTotalEarnings').text(employee.total_earnings ? Number(employee.total_earnings).toLocaleString() : '-');
+        $('#detailTotalDeductions').text(employee.total_deductions ? Number(employee.total_deductions).toLocaleString() : '-');
+        $('#detailNetPayment').text(employee.net_payment ? Number(employee.net_payment).toLocaleString() : '-');
+        $('#detailRemarks').text(employee.remarks || '-');
+        
+        // Allowances
+        $('#detailQualificationAllowance').text(employee.qualification_allowance ? Number(employee.qualification_allowance).toLocaleString() : '-');
+        $('#detailPositionAllowance').text(employee.position_allowance ? Number(employee.position_allowance).toLocaleString() : '-');
+        $('#detailDutyAllowance').text(employee.duty_allowance ? Number(employee.duty_allowance).toLocaleString() : '-');
+        $('#detailOvertimeAllowance').text(employee.overtime_allowance ? Number(employee.overtime_allowance).toLocaleString() : '-');
+        $('#detailHolidayAllowance').text(employee.holiday_work_allowance ? Number(employee.holiday_work_allowance).toLocaleString() : '-');
+        $('#detailNightShiftAllowance').text(employee.night_shift_allowance ? Number(employee.night_shift_allowance).toLocaleString() : '-');
+        $('#detailBonus').text(employee.bonus ? Number(employee.bonus).toLocaleString() : '-');
+        $('#detailTransportationAllowance').text(employee.transportation_allowance ? Number(employee.transportation_allowance).toLocaleString() : '-');
+        $('#detailMealAllowance').text(employee.meal_allowance ? Number(employee.meal_allowance).toLocaleString() : '-');
+        
+        // Deductions
+        $('#detailHealthInsurance').text(employee.health_insurance ? Number(employee.health_insurance).toLocaleString() : '-');
+        $('#detailEmploymentInsurance').text(employee.employment_insurance ? Number(employee.employment_insurance).toLocaleString() : '-');
+        $('#detailNationalPension').text(employee.national_pension ? Number(employee.national_pension).toLocaleString() : '-');
+        $('#detailIncomeTax').text(employee.income_tax ? Number(employee.income_tax).toLocaleString() : '-');
+    }
+    
+    // Close detail sidebar
+    function closeDetailSidebar() {
+        $('#detailSidebar').removeClass('show');
+    }
+    
     // Company filter functionality
     $('#companyFilter').on('change', function() {
         const selectedCompany = $(this).val();
@@ -646,4 +800,153 @@ $(document).ready(function() {
     @endif
 
 </div>
+
+<!-- Employee Detail Sidebar -->
+<div id="detailSidebar">
+    <div class="sidebar-header">
+        <button type="button" class="close-sidebar" onclick="closeDetailSidebar()">
+            <i class="bx bx-x"></i>
+        </button>
+        <h5 class="mb-1">{{ __('employee_summary.detail_title') }}</h5>
+        <div class="text-muted">
+            <span id="detailEmployeeName">-</span> - <span id="detailEmployeeId">-</span>
+        </div>
+    </div>
+    
+    <div class="sidebar-content">
+        <!-- Basic Information -->
+        <div class="sidebar-section">
+            <h6><i class="bx bx-user me-2"></i>{{ __('employee_summary.basic_info') }}</h6>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.company') }}:</div>
+                <div class="sidebar-value" id="detailCompany">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.position') }}:</div>
+                <div class="sidebar-value" id="detailPosition">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.age') }}:</div>
+                <div class="sidebar-value" id="detailAge">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.contact') }}:</div>
+                <div class="sidebar-value" id="detailContact">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.join_date') }}:</div>
+                <div class="sidebar-value" id="detailJoinDate">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.employment_duration') }}:</div>
+                <div class="sidebar-value">
+                    <span class="duration-badge-sidebar" id="detailDuration">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary Summary -->
+        <div class="sidebar-section">
+            <h6><i class="bx bx-money me-2"></i>{{ __('employee_summary.salary_info') }}</h6>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.work_days') }}:</div>
+                <div class="sidebar-value" id="detailWorkDays">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.base_salary') }}:</div>
+                <div class="sidebar-value currency" id="detailBaseSalary">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.total_earnings') }}:</div>
+                <div class="sidebar-value currency" id="detailTotalEarnings">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.total_deductions') }}:</div>
+                <div class="sidebar-value currency" id="detailTotalDeductions">-</div>
+            </div>
+            
+            <div class="sidebar-row" style="border-top: 2px solid #e9ecef; margin-top: 0.5rem; padding-top: 0.75rem;">
+                <div class="sidebar-label"><strong>{{ __('employee_summary.table.net_payment') }}:</strong></div>
+                <div class="sidebar-value currency" id="detailNetPayment"><strong>-</strong></div>
+            </div>
+        </div>
+
+        <!-- Key Allowances -->
+        <div class="sidebar-section">
+            <h6><i class="bx bx-plus-circle me-2"></i>{{ __('employee_summary.allowances') }}</h6>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.qualification_allowance') }}:</div>
+                <div class="sidebar-value currency" id="detailQualificationAllowance">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.position_allowance') }}:</div>
+                <div class="sidebar-value currency" id="detailPositionAllowance">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.overtime_allowance') }}:</div>
+                <div class="sidebar-value currency" id="detailOvertimeAllowance">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.bonus') }}:</div>
+                <div class="sidebar-value currency" id="detailBonus">-</div>
+            </div>
+        </div>
+
+        <!-- Key Deductions -->
+        <div class="sidebar-section">
+            <h6><i class="bx bx-minus-circle me-2"></i>{{ __('employee_summary.deductions') }}</h6>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.health_insurance') }}:</div>
+                <div class="sidebar-value currency" id="detailHealthInsurance">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.national_pension') }}:</div>
+                <div class="sidebar-value currency" id="detailNationalPension">-</div>
+            </div>
+            
+            <div class="sidebar-row">
+                <div class="sidebar-label">{{ __('employee_summary.table.income_tax') }}:</div>
+                <div class="sidebar-value currency" id="detailIncomeTax">-</div>
+            </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="sidebar-section">
+            <h6><i class="bx bx-note me-2"></i>{{ __('employee_summary.table.remarks') }}</h6>
+            <div class="sidebar-value" id="detailRemarks">-</div>
+        </div>
+
+        <!-- Placeholder Sections -->
+        <div class="sidebar-section">
+            <h6><i class="bx bx-chart-line me-2"></i>{{ __('employee_summary.salary_records') }}</h6>
+            <div class="text-muted text-center py-3">
+                {{ __('employee_summary.no_salary_records') }}
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h6><i class="bx bx-calendar-check me-2"></i>{{ __('employee_summary.attendance_leave') }}</h6>
+            <div class="text-muted text-center py-3">
+                {{ __('employee_summary.no_attendance_records') }}
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection

@@ -76,4 +76,65 @@ class EmployeeSummary extends Model
         'total_deductions' => 'decimal:2',
         'net_payment' => 'decimal:2',
     ];
+
+    /**
+     * Calculate employment duration in years and months
+     */
+    public function getEmploymentDurationAttribute()
+    {
+        if (!$this->date_of_joining) {
+            return null;
+        }
+
+        try {
+            $startDate = \Carbon\Carbon::parse($this->date_of_joining);
+            $endDate = \Carbon\Carbon::now();
+            
+            // If the start date is in the future, return null
+            if ($startDate->isFuture()) {
+                return null;
+            }
+            
+            $diff = $startDate->diff($endDate);
+            $years = $diff->y;
+            $months = $diff->m;
+            $days = $diff->d;
+            
+            if ($years > 0 && $months > 0) {
+                return "{$years}y {$months}m";
+            } elseif ($years > 0) {
+                return "{$years}y";
+            } elseif ($months > 0) {
+                return "{$months}m";
+            } else {
+                return "{$days}d";
+            }
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Calculate employment duration in days
+     */
+    public function getEmploymentDurationInDaysAttribute()
+    {
+        if (!$this->date_of_joining) {
+            return null;
+        }
+
+        try {
+            $startDate = \Carbon\Carbon::parse($this->date_of_joining);
+            $endDate = \Carbon\Carbon::now();
+            
+            // If the start date is in the future, return null
+            if ($startDate->isFuture()) {
+                return null;
+            }
+
+            return $startDate->diffInDays($endDate);
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }

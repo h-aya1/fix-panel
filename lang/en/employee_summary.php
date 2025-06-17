@@ -98,7 +98,27 @@ return [
     
     // Actions
     'delete_row' => 'Delete',
+    'view_detail' => 'View Detail',
     'confirm_delete_row' => 'Are you sure you want to delete this record?',
     'row_deleted' => 'Record deleted successfully!',
     'delete_row_failed' => 'Failed to delete record',
+    
+    // Detail View
+    'detail_title' => 'Employee Detail',
+    'employment_duration' => 'Employment Duration',
+    'duration_na' => 'N/A',
+    'basic_info' => 'Basic Information',
+    'salary_info' => 'Salary Information',
+    'salary_records' => 'Salary Records',
+    'attendance_leave' => 'Attendance & Leave',
+    'allowances' => 'Allowances',
+    'deductions' => 'Deductions',
+    'totals' => 'Total',
+    'no_salary_records' => 'No salary records available yet.',
+    'no_attendance_records' => 'No attendance records available yet.',
+    
+    // Import section
+    'no_records' => 'No Records Found',
+    'no_records_description' => 'Start by importing your first employee summary file.',
+    'import_first_file' => 'Import Your First File',
 ];

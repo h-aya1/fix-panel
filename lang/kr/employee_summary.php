@@ -88,14 +88,29 @@ return [
     
     // Actions
     'delete_row' => '삭제',
+    'view_detail' => '상세보기',
     'confirm_delete_row' => '이 레코드를 삭제하시겠습니까?',
     'row_deleted' => '레코드가 성공적으로 삭제되었습니다!',
     'delete_row_failed' => '레코드 삭제에 실패했습니다',
     
-    // Empty state
-    'no_records' => '직원 요약 레코드가 없습니다',
+    // Detail View
+    'detail_title' => '직원 상세정보',
+    'employment_duration' => '재직기간',
+    'duration_na' => '해당없음',
+    'basic_info' => '기본 정보',
+    'salary_info' => '급여 정보',
+    'salary_records' => '급여 기록',
+    'attendance_leave' => '근태 및 휴가',
+    'allowances' => '수당',
+    'deductions' => '공제',
+    'totals' => '합계',
+    'no_salary_records' => '아직 급여 기록이 없습니다.',
+    'no_attendance_records' => '아직 근태 기록이 없습니다.',
+    
+    // Import section
+    'no_records' => '레코드가 없습니다',
     'no_records_description' => '첫 번째 직원 요약 파일을 가져와서 시작하세요.',
-    'import_first_file' => '첫 파일 가져오기',
+    'import_first_file' => '첫 번째 파일 가져오기',
     
     // CRUD messages
     'created_successfully' => '직원 요약이 성공적으로 생성되었습니다!',

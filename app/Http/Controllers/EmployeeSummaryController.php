@@ -24,6 +24,12 @@ class EmployeeSummaryController extends Controller
             }
             
             $summaries = $query->orderBy('created_at', 'desc')->get();
+            
+            // Add employment duration to each record
+            $summaries->each(function ($summary) {
+                $summary->employment_duration = $summary->employment_duration;
+            });
+            
             return response()->json($summaries);
         }
 
@@ -35,6 +41,13 @@ class EmployeeSummaryController extends Controller
         }
 
         $summaries = $query->orderBy('created_at', 'desc')->paginate(50);
+        
+        // Add employment duration to each record in the collection
+        $summaries->getCollection()->transform(function ($summary) {
+            $summary->employment_duration = $summary->employment_duration;
+            return $summary;
+        });
+        
         $totalRecords = EmployeeSummary::count();
         $latestImport = EmployeeSummary::latest('imported_at')->first();
         
@@ -82,8 +95,18 @@ class EmployeeSummaryController extends Controller
     /**
      * Display the specified employee summary.
      */
-    public function show(EmployeeSummary $employeeSummary)
+    public function show(EmployeeSummary $employeeSummary, Request $request)
     {
+        // Add employment duration to the model
+        $employeeSummary->employment_duration = $employeeSummary->employment_duration;
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'data' => $employeeSummary
+            ]);
+        }
+        
         return view('employee-summaries.show', compact('employeeSummary'));
     }
 
