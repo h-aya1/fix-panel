@@ -29,7 +29,7 @@
     <!-- Helpers -->
     <script src="{{ asset('templates/assets/vendor/js/helpers.js') }}"></script>
     <script src="{{ asset('templates/assets/js/config.js') }}"></script>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 </head>
 <body>
     <!-- Layout wrapper -->
@@ -119,18 +119,18 @@
                         <div data-i18n="Dashboard">{{ __('Dashboard') }}</div>
                         </a>
                     </li>
-                    <li class="menu-item {{ request()->routeIs('employees.*') ? 'active' : '' }}">
-                        <a href="{{ route('employees.index') }}" class="menu-link">
+                    <li class="menu-item {{ request()->routeIs('employee-summaries.*') ? 'active' : '' }}">
+                        <a href="{{ route('employee-summaries.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-user"></i>
-                        <div data-i18n="Employees">{{ __('Employees') }}</div>
+                        <div data-i18n="employee-summaries">{{ __('employee-summaries') }}</div>
                         </a>
                     </li>
-                    <li class="menu-item {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
+                    {{-- <li class="menu-item {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
                         <a href="{{ route('payrolls.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-money"></i>
                         <div data-i18n="Payrolls">{{ __('Payrolls') }}</div>
                         </a>
-                    </li>
+                    </li> --}}
                     </ul>
                 </div>
             </aside>
