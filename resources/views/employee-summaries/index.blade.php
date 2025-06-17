@@ -21,7 +21,7 @@
     .upload-icon { width: 40px; height: 40px; background-color: #e9ecef; margin: 0 auto 15px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #495057; }
     .upload-icon::before { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' fill='currentColor' class='bi bi-cloud-arrow-up-fill' viewBox='0 0 16 16'%3E%3Cpath d='M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2z'/%3E%3C/svg%3E"); }
     #summaryGrid { width: 100%; height: 600px; border: 1px solid #dee2e6; border-radius: 0.25rem; }
-    .empty-state { text-align: center; py-5; }
+    .empty-state { text-align: center; padding-top: 5rem; padding-bottom: 5rem; }
     
     /* Preview Modal Styles */
     .modal-xl { max-width: 1200px; }
@@ -173,6 +173,7 @@ $(document).ready(function() {
             { name: 'remarks', type: 'string' },
             { name: 'imported_at', type: 'date' }
         ],
+        id: 'id', // Important for deleterow to work correctly
         localdata: summaryData
     };
     
@@ -241,12 +242,13 @@ $(document).ready(function() {
                 sortable: false,
                 filterable: false,
                 cellsrenderer: function (row, columnfield, value, defaulthtml, columnproperties, rowdata) {
+                    // Use rowdata.uid for jqxGrid's internal row id
                     return `
                         <div class="btn-group btn-group-sm" role="group">
                             <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewDetail(${rowdata.id})" title="{{ __('employee_summary.view_detail') }}">
                                 <i class="bx bx-show"></i>
                             </button>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteRow(${rowdata.id})" title="{{ __('employee_summary.delete_row') }}">
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteRow(${rowdata.id}, '${rowdata.uid}')" title="{{ __('employee_summary.delete_row') }}">
                                 <i class="bx bx-trash"></i>
                             </button>
                         </div>
@@ -575,8 +577,11 @@ $(document).ready(function() {
         });
     }
     
+    // START: >>>>> CORRECTED FUNCTIONS <<<<<
+    // Attach functions to the window object to make them globally accessible
+    
     // Delete row functionality
-    function deleteRow(id) {
+    window.deleteRow = function(id, rowId) { // Added rowId for jqxGrid
         Swal.fire({
             title: '{{ __("employee_summary.confirm_delete_row") }}',
             icon: 'warning',
@@ -587,8 +592,9 @@ $(document).ready(function() {
             cancelButtonText: '{{ __("app.cancel") }}'
         }).then((result) => {
             if (result.isConfirmed) {
+                console.log(`Deleting row with ID: ${id}, jqxGrid row ID: ${rowId}`);
                 $.ajax({
-                    url: `/employee-summaries/${id}`,
+                    url: '/employee-summaries/' + rowId,
                     type: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -598,9 +604,11 @@ $(document).ready(function() {
                             Swal.fire({
                                 icon: 'success',
                                 title: '{{ __("employee_summary.row_deleted") }}',
-                                timer: 2000
+                                timer: 2000,
+                                showConfirmButton: false
                             });
-                            $("#summaryGrid").jqxGrid('deleterow', id);
+                            // Use the grid's API to remove the row from the view
+                            $("#summaryGrid").jqxGrid('deleterow', rowId);
                         }
                     },
                     error: function(xhr) {
@@ -614,10 +622,10 @@ $(document).ready(function() {
                 });
             }
         });
-    }
+    };
     
     // View detail functionality
-    function viewDetail(id) {
+    window.viewDetail = function(id) {
         // Load employee details via AJAX
         $.ajax({
             url: `/employee-summaries/${id}`,
@@ -629,6 +637,12 @@ $(document).ready(function() {
                 if (response.success) {
                     populateDetailSidebar(response.data);
                     $('#detailSidebar').addClass('show');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '{{ __("app.error") }}',
+                        text: response.message || 'Failed to load employee details.'
+                    });
                 }
             },
             error: function(xhr) {
@@ -636,14 +650,24 @@ $(document).ready(function() {
                 Swal.fire({
                     icon: 'error',
                     title: '{{ __("app.error") }}',
-                    text: 'Failed to load employee details'
+                    text: 'An unexpected error occurred while loading employee details.'
                 });
             }
         });
-    }
+    };
     
-    // Populate detail sidebar with employee data
+    // Close detail sidebar
+    window.closeDetailSidebar = function() {
+        $('#detailSidebar').removeClass('show');
+    };
+
+    // END: >>>>> CORRECTED FUNCTIONS <<<<<
+
+    
+    // Populate detail sidebar with employee data (this can remain a local function)
     function populateDetailSidebar(employee) {
+        const formatNumber = (num) => num ? Number(num).toLocaleString() : '-';
+        
         $('#detailEmployeeName').text(employee.name || '-');
         $('#detailEmployeeId').text(employee.employee_id || '-');
         $('#detailCompany').text(employee.company_name || '-');
@@ -653,33 +677,28 @@ $(document).ready(function() {
         $('#detailJoinDate').text(employee.date_of_joining ? new Date(employee.date_of_joining).toLocaleDateString() : '-');
         $('#detailDuration').text(employee.employment_duration || '-');
         $('#detailWorkDays').text(employee.work_days || '-');
-        $('#detailBaseSalary').text(employee.base_salary ? Number(employee.base_salary).toLocaleString() : '-');
-        $('#detailTotalEarnings').text(employee.total_earnings ? Number(employee.total_earnings).toLocaleString() : '-');
-        $('#detailTotalDeductions').text(employee.total_deductions ? Number(employee.total_deductions).toLocaleString() : '-');
-        $('#detailNetPayment').text(employee.net_payment ? Number(employee.net_payment).toLocaleString() : '-');
+        $('#detailBaseSalary').text(formatNumber(employee.base_salary));
+        $('#detailTotalEarnings').text(formatNumber(employee.total_earnings));
+        $('#detailTotalDeductions').text(formatNumber(employee.total_deductions));
+        $('#detailNetPayment').html(`<strong>${formatNumber(employee.net_payment)}</strong>`);
         $('#detailRemarks').text(employee.remarks || '-');
         
         // Allowances
-        $('#detailQualificationAllowance').text(employee.qualification_allowance ? Number(employee.qualification_allowance).toLocaleString() : '-');
-        $('#detailPositionAllowance').text(employee.position_allowance ? Number(employee.position_allowance).toLocaleString() : '-');
-        $('#detailDutyAllowance').text(employee.duty_allowance ? Number(employee.duty_allowance).toLocaleString() : '-');
-        $('#detailOvertimeAllowance').text(employee.overtime_allowance ? Number(employee.overtime_allowance).toLocaleString() : '-');
-        $('#detailHolidayAllowance').text(employee.holiday_work_allowance ? Number(employee.holiday_work_allowance).toLocaleString() : '-');
-        $('#detailNightShiftAllowance').text(employee.night_shift_allowance ? Number(employee.night_shift_allowance).toLocaleString() : '-');
-        $('#detailBonus').text(employee.bonus ? Number(employee.bonus).toLocaleString() : '-');
-        $('#detailTransportationAllowance').text(employee.transportation_allowance ? Number(employee.transportation_allowance).toLocaleString() : '-');
-        $('#detailMealAllowance').text(employee.meal_allowance ? Number(employee.meal_allowance).toLocaleString() : '-');
+        $('#detailQualificationAllowance').text(formatNumber(employee.qualification_allowance));
+        $('#detailPositionAllowance').text(formatNumber(employee.position_allowance));
+        $('#detailDutyAllowance').text(formatNumber(employee.duty_allowance));
+        $('#detailOvertimeAllowance').text(formatNumber(employee.overtime_allowance));
+        $('#detailHolidayAllowance').text(formatNumber(employee.holiday_work_allowance));
+        $('#detailNightShiftAllowance').text(formatNumber(employee.night_shift_allowance));
+        $('#detailBonus').text(formatNumber(employee.bonus));
+        $('#detailTransportationAllowance').text(formatNumber(employee.transportation_allowance));
+        $('#detailMealAllowance').text(formatNumber(employee.meal_allowance));
         
         // Deductions
-        $('#detailHealthInsurance').text(employee.health_insurance ? Number(employee.health_insurance).toLocaleString() : '-');
-        $('#detailEmploymentInsurance').text(employee.employment_insurance ? Number(employee.employment_insurance).toLocaleString() : '-');
-        $('#detailNationalPension').text(employee.national_pension ? Number(employee.national_pension).toLocaleString() : '-');
-        $('#detailIncomeTax').text(employee.income_tax ? Number(employee.income_tax).toLocaleString() : '-');
-    }
-    
-    // Close detail sidebar
-    function closeDetailSidebar() {
-        $('#detailSidebar').removeClass('show');
+        $('#detailHealthInsurance').text(formatNumber(employee.health_insurance));
+        $('#detailEmploymentInsurance').text(formatNumber(employee.employment_insurance));
+        $('#detailNationalPension').text(formatNumber(employee.national_pension));
+        $('#detailIncomeTax').text(formatNumber(employee.income_tax));
     }
     
     // Company filter functionality
@@ -934,7 +953,7 @@ $(document).ready(function() {
 
         <!-- Placeholder Sections -->
         <div class="sidebar-section">
-            <h6><i class="bx bx-chart-line me-2"></i>{{ __('employee_summary.salary_records') }}</h6>
+            <h6><i class="bx bx-line-chart me-2"></i>{{ __('employee_summary.salary_records') }}</h6>
             <div class="text-muted text-center py-3">
                 {{ __('employee_summary.no_salary_records') }}
             </div>
