@@ -1,4 +1,5 @@
+Employee Import Template
 employee_id,name,company_name,position,date_of_birth,resident_registration_number,contact_number,date_of_joining,employment_duration,work_days,base_salary
-EMP001,John Doe,Company ABC,Manager,1990-01-01,900101-1234567,010-1234-5678,2023-01-01,1 year,250,5000000
-EMP002,Jane Smith,Company XYZ,Developer,1992-05-15,920515-2345678,010-2345-6789,2022-06-01,1.5 years,260,4500000
-EMP003,김철수,한국회사,팀장,1988-12-25,881225-1111111,010-3456-7890,2021-03-01,2.5 years,270,6000000
+EMP001,John Doe,Company ABC,Manager,1990-01-01,900101-1234567,010-1234-5678,2023-01-01,2 years,250,5000000
+EMP002,Jane Smith,Company XYZ,Developer,1992-05-15,920515-2345678,010-2345-6789,2022-06-01,2.5 years,260,4500000
+EMP003,김철수,한국회사,팀장,1988-12-25,881225-1111111,010-3456-7890,2021-03-01,3 years,270,6000000

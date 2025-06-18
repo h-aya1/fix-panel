@@ -34,12 +34,9 @@ class EmployeeController extends Controller
             'position' => 'required|string',
             'name' => 'required|string',
             'age' => 'nullable|integer',
-            'date_of_birth' => 'nullable|date',
             'ssn' => 'nullable|string',
             'resident_registration_number' => 'nullable|string',
-            'join_date' => 'nullable|date',
             'date_of_joining' => 'nullable|date',
-            'join_date_str' => 'nullable|string',
             'service_period' => 'nullable|string',
             'employment_duration' => 'nullable|string',
             'work_days' => 'nullable|integer',
@@ -50,9 +47,8 @@ class EmployeeController extends Controller
             'employment_status_subtext' => 'nullable|string',
         ]);
         $validated['uid'] = \Str::uuid()->toString(); // Generate a unique identifier
-        $validated['join_date'] = $validated['join_date'] ? \Carbon\Carbon::parse($validated['join_date']) : null; // Convert join_date to Carbon instance if provided
         $validated['date_of_joining'] = $validated['date_of_joining'] ? \Carbon\Carbon::parse($validated['date_of_joining']) : null;
-        $validated['date_of_birth'] = $validated['date_of_birth'] ? \Carbon\Carbon::parse($validated['date_of_birth']) : null;
+        $validated['work_location'] = $validated['company_name'] ?? null;
         Employee::create($validated);
         Session::flash('success', __('employee.created_successfully'));
         return redirect()->route('employees.index');
@@ -111,7 +107,7 @@ class EmployeeController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv',
+            'file' => 'required|file',
         ]);
         // You need to implement EmployeeImport or use a package like Laravel Excel
         Excel::import(new \App\Imports\EmployeeImport, $request->file('file'));
@@ -127,30 +123,73 @@ class EmployeeController extends Controller
 
         try {
             $file = $request->file('file');
-            $data = Excel::toArray(new \App\Imports\EmployeeImport, $file);
+            
+            // Read the raw data without using the EmployeeImport class
+            $data = Excel::toArray([], $file);
             
             if (empty($data) || empty($data[0])) {
                 return response()->json([
                     'success' => false,
-                    'message' => __('employee.management.no_data_to_import')
+                    'message' => 'No data found in file'
                 ]);
             }
 
-            $headers = array_keys($data[0][0]);
-            $rows = array_slice($data[0], 0, 10); // Preview first 10 rows
+            $allData = $data[0];
+            
+            // Skip first row (title), use second row as headers, data starts from row 3
+            if (count($allData) < 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File must have at least 3 rows (title, headers, data)'
+                ]);
+            }
+
+            // Row 1 (index 1) contains headers
+            $headers = $allData[1];
+            
+            // Data starts from row 2 (index 2)
+            $dataRows = array_slice($allData, 2);
+            
+            if (empty($dataRows)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No data rows found'
+                ]);
+            }
+
+            // Convert data to associative arrays
+            $processedRows = [];
+            foreach ($dataRows as $index => $row) {
+                $processedRow = [];
+                for ($i = 0; $i < count($headers); $i++) {
+                    $header = trim($headers[$i] ?? '');
+                    // Use headers as-is if they match expected field names
+                    $processedRow[$header] = $row[$i] ?? '';
+                }
+                $processedRow['row_index'] = $index; // Keep track of original index
+                $processedRows[] = $processedRow;
+            }
+            
+            // Add debugging
+            \Log::info('Preview headers:', $headers);
+            \Log::info('First processed row:', $processedRows[0] ?? []);
+            
+            // Preview first 10 data rows
+            $previewRows = array_slice($processedRows, 0, 10);
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'headers' => $headers,
-                    'rows' => $rows,
-                    'total' => count($data[0])
+                    'rows' => $previewRows,
+                    'total' => count($processedRows),
+                    'start_row' => 3
                 ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => __('employee.management.import_error')
+                'message' => 'Import error: ' . $e->getMessage()
             ]);
         }
     }
@@ -158,47 +197,74 @@ class EmployeeController extends Controller
     public function savePreview(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv',
+            'file' => 'required|file',
             'selected_rows' => 'required|array',
         ]);
 
         try {
             $file = $request->file('file');
             $selectedRows = $request->input('selected_rows');
-            $data = Excel::toArray(new \App\Imports\EmployeeImport, $file);
+            
+            // Read the raw data without using the EmployeeImport class
+            $data = Excel::toArray([], $file);
             
             if (empty($data) || empty($data[0])) {
                 return response()->json([
                     'success' => false,
-                    'message' => __('employee.management.no_data_to_import')
+                    'message' => 'No data found in file'
                 ]);
             }
 
-            $headers = array_keys($data[0][0]);
+            $allData = $data[0];
+            
+            if (count($allData) < 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File must have at least 3 rows'
+                ]);
+            }
+
+            // Row 1 (index 1) contains headers
+            $headers = $allData[1];
+            
+            // Data starts from row 2 (index 2)
+            $dataRows = array_slice($allData, 2);
+            
             $importedCount = 0;
 
-            foreach ($selectedRows as $index) {
-                if (isset($data[0][$index])) {
-                    $row = $data[0][$index];
+            foreach ($selectedRows as $rowIndex) {
+                if (isset($dataRows[$rowIndex])) {
+                    $row = $dataRows[$rowIndex];
+                    
+                    // Map the row data to field names using headers directly
+                    $mappedData = [];
+                    foreach ($row as $cellIndex => $cellValue) {
+                        if (isset($headers[$cellIndex])) {
+                            $header = trim($headers[$cellIndex]);
+                            $mappedData[$header] = $cellValue;
+                        }
+                    }
+                    
                     try {
                         Employee::create([
                             'uid' => \Str::uuid()->toString(),
-                            'employee_id' => $row['employee_id'] ?? null,
-                            'name' => $row['name'] ?? null,
-                            'company_name' => $row['company_name'] ?? null,
-                            'position' => $row['position'] ?? null,
-                            'date_of_birth' => $row['date_of_birth'] ?? null,
-                            'resident_registration_number' => $row['resident_registration_number'] ?? null,
-                            'contact_number' => $row['contact_number'] ?? null,
-                            'date_of_joining' => $row['date_of_joining'] ?? null,
-                            'employment_duration' => $row['employment_duration'] ?? null,
-                            'work_days' => $row['work_days'] ?? null,
-                            'base_salary' => $row['base_salary'] ?? null,
-                            'employment_status_key' => $row['employment_status_key'] ?? 'active',
+                            'employee_id' => $mappedData['employee_id'] ?? null,
+                            'name' => $mappedData['name'] ?? null,
+                            'company_name' => $mappedData['company_name'] ?? null,
+                            'position' => $mappedData['position'] ?? null,
+                            'date_of_birth' => $mappedData['date_of_birth'] ?? null,
+                            'resident_registration_number' => $mappedData['resident_registration_number'] ?? null,
+                            'contact_number' => $mappedData['contact_number'] ?? null,
+                            'date_of_joining' => $mappedData['date_of_joining'] ?? null,
+                            'employment_duration' => $mappedData['employment_duration'] ?? null,
+                            'work_days' => is_numeric($mappedData['work_days'] ?? null) ? (int)$mappedData['work_days'] : null,
+                            'base_salary' => is_numeric($mappedData['base_salary'] ?? null) ? (float)$mappedData['base_salary'] : null,
+                            'employment_status_key' => 'active',
                         ]);
                         $importedCount++;
                     } catch (\Exception $e) {
-                        // Skip invalid rows
+                        // Log the error for debugging
+                        \Log::error('Failed to import employee row: ' . $e->getMessage(), ['row' => $mappedData]);
                         continue;
                     }
                 }
@@ -206,13 +272,13 @@ class EmployeeController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => __('employee.management.import_success'),
+                'message' => 'Import successful',
                 'imported_count' => $importedCount
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => __('employee.management.import_error')
+                'message' => 'Import error: ' . $e->getMessage()
             ]);
         }
     }

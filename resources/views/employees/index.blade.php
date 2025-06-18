@@ -319,56 +319,52 @@
                     @csrf
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="employee_id" class="form-label">{{ __('employee.table.header.employee_id') }} *</label>
+                            <label for="employee_id" class="form-label">Employee ID *</label>
                             <input type="text" class="form-control" id="employee_id" name="employee_id" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">{{ __('employee.table.header.name') }} *</label>
+                            <label for="name" class="form-label">Name *</label>
                             <input type="text" class="form-control" id="name" name="name" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="company_name" class="form-label">{{ __('employee.table.header.company_name') }}</label>
+                            <label for="company_name" class="form-label">Company Name</label>
                             <input type="text" class="form-control" id="company_name" name="company_name">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="position" class="form-label">{{ __('employee.table.header.position') }} *</label>
+                            <label for="position" class="form-label">Position *</label>
                             <input type="text" class="form-control" id="position" name="position" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="date_of_birth" class="form-label">{{ __('employee.table.header.date_of_birth') }}</label>
-                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth">
+                            <label for="age" class="form-label">Age</label>
+                            <input type="number" class="form-control" id="age" name="age">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="resident_registration_number" class="form-label">{{ __('employee.table.header.resident_registration_number') }}</label>
+                            <label for="resident_registration_number" class="form-label">Resident Registration Number</label>
                             <input type="text" class="form-control" id="resident_registration_number" name="resident_registration_number">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="contact_number" class="form-label">{{ __('employee.table.header.contact_number') }}</label>
+                            <label for="contact_number" class="form-label">Contact Number</label>
                             <input type="text" class="form-control" id="contact_number" name="contact_number">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="date_of_joining" class="form-label">{{ __('employee.table.header.date_of_joining') }}</label>
+                            <label for="date_of_joining" class="form-label">Date of Joining</label>
                             <input type="date" class="form-control" id="date_of_joining" name="date_of_joining">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="employment_duration" class="form-label">{{ __('employee.table.header.employment_duration') }}</label>
-                            <input type="text" class="form-control" id="employment_duration" name="employment_duration">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="work_days" class="form-label">{{ __('employee.table.header.work_days') }}</label>
+                            <label for="work_days" class="form-label">Work Days</label>
                             <input type="number" class="form-control" id="work_days" name="work_days">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="base_salary" class="form-label">{{ __('employee.table.header.base_salary') }}</label>
+                            <label for="base_salary" class="form-label">Base Salary</label>
                             <input type="number" class="form-control" id="base_salary" name="base_salary" step="0.01">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="employment_status_key" class="form-label">{{ __('employee.table.header.employment_status') }} *</label>
+                            <label for="employment_status_key" class="form-label">Status *</label>
                             <select class="form-select" id="employment_status_key" name="employment_status_key" required>
-                                <option value="active">{{ __('employee.status.working') }}</option>
-                                <option value="resigning">{{ __('employee.status.resigning') }}</option>
-                                <option value="resigned">{{ __('employee.status.resigned') }}</option>
-                                <option value="on_leave">{{ __('employee.status.on_leave') }}</option>
+                                <option value="active">Active</option>
+                                <option value="resigning">Resigning</option>
+                                <option value="resigned">Resigned</option>
+                                <option value="on_leave">On Leave</option>
                             </select>
                         </div>
                     </div>
@@ -389,6 +385,8 @@
 <script src="{{ asset('jqwidgets/jqxdata.js') }}"></script>
 <script src="{{ asset('jqwidgets/jqxbuttons.js') }}"></script>
 <script src="{{ asset('jqwidgets/jqxscrollbar.js') }}"></script>
+<script src="{{ asset('jqwidgets/jqxlistbox.js') }}"></script>
+<script src="{{ asset('jqwidgets/jqxdropdownlist.js') }}"></script>
 <script src="{{ asset('jqwidgets/jqxmenu.js') }}"></script>
 <script src="{{ asset('jqwidgets/jqxgrid.js') }}"></script>
 <script src="{{ asset('jqwidgets/jqxgrid.selection.js') }}"></script>
@@ -480,18 +478,34 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     previewData = response.data;
+                    console.log('Preview data received:', previewData); // Debug log
                     showPreviewModal();
                 } else {
                     showAlert('danger', response.message || 'Failed to process file.');
+                    resetFileInput();
                 }
             },
-            error: function() {
-                showAlert('danger', 'Failed to upload file. Please try again.');
+            error: function(xhr) {
+                let errorMessage = 'Failed to upload file. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    const errors = Object.values(xhr.responseJSON.errors).flat();
+                    errorMessage = errors.join(', ');
+                }
+                showAlert('danger', errorMessage);
+                resetFileInput();
             },
             complete: function() {
                 importArea.classList.remove('loading');
             }
         });
+    }
+
+    function resetFileInput() {
+        fileInput.value = '';
+        selectedFile = null;
+        importArea.classList.remove('dragover', 'loading');
     }
 
     function showPreviewModal() {
@@ -501,37 +515,50 @@ $(document).ready(function() {
     }
 
     function setupPreviewGrid() {
-        if (!previewData || !previewData.rows) return;
+        if (!previewData || !previewData.rows) {
+            console.log('No preview data available:', previewData);
+            return;
+        }
+
+        console.log('Setting up preview grid with data:', previewData);
+        console.log('Preview rows:', previewData.rows);
 
         const columns = [
             { text: '', datafield: 'selected', columntype: 'checkbox', width: 50 },
-            { text: '{{ __("employee.table.header.employee_id") }}', datafield: 'employee_id', width: 100 },
-            { text: '{{ __("employee.table.header.name") }}', datafield: 'name', width: 120 },
-            { text: '{{ __("employee.table.header.company_name") }}', datafield: 'company_name', width: 120 },
-            { text: '{{ __("employee.table.header.position") }}', datafield: 'position', width: 100 },
-            { text: '{{ __("employee.table.header.date_of_birth") }}', datafield: 'date_of_birth', width: 110 },
-            { text: '{{ __("employee.table.header.resident_registration_number") }}', datafield: 'resident_registration_number', width: 180 },
-            { text: '{{ __("employee.table.header.contact_number") }}', datafield: 'contact_number', width: 120 },
-            { text: '{{ __("employee.table.header.date_of_joining") }}', datafield: 'date_of_joining', width: 120 },
-            { text: '{{ __("employee.table.header.employment_duration") }}', datafield: 'employment_duration', width: 130 },
-            { text: '{{ __("employee.table.header.work_days") }}', datafield: 'work_days', width: 100 },
-            { text: '{{ __("employee.table.header.base_salary") }}', datafield: 'base_salary', width: 100 }
+            { text: 'Employee ID', datafield: 'employee_id', width: 100 },
+            { text: 'Name', datafield: 'name', width: 120 },
+            { text: 'Company Name', datafield: 'company_name', width: 120 },
+            { text: 'Position', datafield: 'position', width: 100 },
+            { text: 'Date of Birth', datafield: 'date_of_birth', width: 120 },
+            { text: 'Resident Registration Number', datafield: 'resident_registration_number', width: 180 },
+            { text: 'Contact Number', datafield: 'contact_number', width: 120 },
+            { text: 'Date of Joining', datafield: 'date_of_joining', width: 120 },
+            { text: 'Employment Duration', datafield: 'employment_duration', width: 120 },
+            { text: 'Work Days', datafield: 'work_days', width: 100 },
+            { text: 'Base Salary', datafield: 'base_salary', width: 100 }
         ];
 
         const dataAdapter = new $.jqx.dataAdapter({
             localdata: previewData.rows.map((row, index) => ({
                 ...row,
                 selected: true,
-                rowIndex: index
+                originalIndex: index // Keep track of original index for saving
             }))
         });
+
+        // Clear existing grid
+        try {
+            $('#previewGrid').jqxGrid('clear');
+            $('#previewGrid').jqxGrid('destroy');
+        } catch (e) {
+            // Grid may not exist yet
+        }
 
         $('#previewGrid').jqxGrid({
             width: '100%',
             height: 300,
             source: dataAdapter,
             columns: columns,
-            checkboxes: true,
             columnsresize: true,
             sortable: true,
             filterable: true,
@@ -540,7 +567,11 @@ $(document).ready(function() {
 
         updateSelectedCount();
         
-        $('#previewGrid').on('cellvaluechanged', function() {
+        $('#previewGrid').on('rowselect', function() {
+            updateSelectedCount();
+        });
+        
+        $('#previewGrid').on('rowunselect', function() {
             updateSelectedCount();
         });
     }
@@ -576,7 +607,12 @@ $(document).ready(function() {
 
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('selected_rows', JSON.stringify(selectedIndexes));
+        
+        // Append each selected row index as a separate array element
+        selectedIndexes.forEach(function(index) {
+            formData.append('selected_rows[]', index);
+        });
+        
         formData.append('_token', '{{ csrf_token() }}');
 
         $.ajax({
@@ -592,13 +628,18 @@ $(document).ready(function() {
                 if (response.success) {
                     showAlert('success', `${response.imported_count} employees imported successfully!`);
                     bootstrap.Modal.getInstance(document.getElementById('previewModal')).hide();
+                    resetFileInput();
                     loadEmployees(); // Refresh the grid
                 } else {
                     showAlert('danger', response.message || 'Failed to import employees.');
                 }
             },
-            error: function() {
-                showAlert('danger', 'Failed to import employees. Please try again.');
+            error: function(xhr) {
+                let errorMessage = 'Failed to import employees. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                showAlert('danger', errorMessage);
             },
             complete: function() {
                 $('#saveSelectedBtn').prop('disabled', false).text('{{ __("Save Selected") }}');
@@ -634,19 +675,19 @@ $(document).ready(function() {
         }
 
         const columns = [
-            { text: '{{ __("employee.table.header.employee_id") }}', datafield: 'employee_id', width: 100 },
-            { text: '{{ __("employee.table.header.name") }}', datafield: 'name', width: 120 },
-            { text: '{{ __("employee.table.header.company_name") }}', datafield: 'company_name', width: 120 },
-            { text: '{{ __("employee.table.header.position") }}', datafield: 'position', width: 100 },
-            { text: '{{ __("employee.table.header.date_of_birth") }}', datafield: 'date_of_birth', width: 110 },
-            { text: '{{ __("employee.table.header.resident_registration_number") }}', datafield: 'resident_registration_number', width: 180 },
-            { text: '{{ __("employee.table.header.contact_number") }}', datafield: 'contact_number', width: 120 },
-            { text: '{{ __("employee.table.header.date_of_joining") }}', datafield: 'date_of_joining', width: 120 },
-            { text: '{{ __("employee.table.header.employment_duration") }}', datafield: 'employment_duration', width: 130 },
-            { text: '{{ __("employee.table.header.work_days") }}', datafield: 'work_days', width: 100 },
-            { text: '{{ __("employee.table.header.base_salary") }}', datafield: 'base_salary', width: 100 },
+            { text: 'Employee ID', datafield: 'employee_id', width: 100 },
+            { text: 'Name', datafield: 'name', width: 120 },
+            { text: 'Company Name', datafield: 'company_name', width: 120 },
+            { text: 'Position', datafield: 'position', width: 100 },
+            { text: 'Date of Birth', datafield: 'date_of_birth', width: 120 },
+            { text: 'Resident Registration Number', datafield: 'resident_registration_number', width: 180 },
+            { text: 'Contact Number', datafield: 'contact_number', width: 120 },
+            { text: 'Date of Joining', datafield: 'date_of_joining', width: 120 },
+            { text: 'Employment Duration', datafield: 'employment_duration', width: 120 },
+            { text: 'Work Days', datafield: 'work_days', width: 100 },
+            { text: 'Base Salary', datafield: 'base_salary', width: 100 },
             { 
-                text: '{{ __("employee.table.header.actions") }}', 
+                text: 'Actions', 
                 datafield: 'actions', 
                 width: 80, 
                 cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata) {
@@ -669,7 +710,12 @@ $(document).ready(function() {
         });
 
         // Clear and reinitialize grid
-        $('#employeeGrid').jqxGrid('destroy');
+        try {
+            $('#employeeGrid').jqxGrid('destroy');
+        } catch (e) {
+            // Grid may not exist yet
+        }
+        
         $('#employeeGrid').jqxGrid({
             width: '100%',
             height: 400,
@@ -715,11 +761,10 @@ $(document).ready(function() {
         $('#name').val(employee.name);
         $('#company_name').val(employee.company_name);
         $('#position').val(employee.position);
-        $('#date_of_birth').val(employee.date_of_birth);
+        $('#age').val(employee.age);
         $('#resident_registration_number').val(employee.resident_registration_number);
         $('#contact_number').val(employee.contact_number);
         $('#date_of_joining').val(employee.date_of_joining);
-        $('#employment_duration').val(employee.employment_duration);
         $('#work_days').val(employee.work_days);
         $('#base_salary').val(employee.base_salary);
         $('#employment_status_key').val(employee.employment_status_key || 'active');
@@ -864,6 +909,17 @@ $(document).ready(function() {
         $('#addEmployeeForm')[0].reset();
         $('#addEmployeeForm').removeAttr('data-id');
         $('#addEmployeeModalLabel').text('{{ __("employee.management.add_employee_title") }}');
+    });
+
+    // Reset preview modal when hidden
+    $('#previewModal').on('hidden.bs.modal', function() {
+        resetFileInput();
+        try {
+            $('#previewGrid').jqxGrid('clear');
+        } catch (e) {
+            // Grid may not exist
+        }
+        previewData = [];
     });
 
     function showAlert(type, message) {
