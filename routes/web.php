@@ -28,6 +28,10 @@ Route::middleware('auth')->group(function () {
     Route::get('employees-import', [EmployeeController::class, 'importForm'])->name('employees.import.form');
     Route::post('employees-import', [EmployeeController::class, 'import'])->name('employees.import');
     Route::post('employees/import', [\App\Http\Controllers\EmployeeController::class, 'import'])->name('employees.import');
+    Route::post('employees/preview', [\App\Http\Controllers\EmployeeController::class, 'preview'])->name('employees.preview');
+    Route::post('employees/save-preview', [\App\Http\Controllers\EmployeeController::class, 'savePreview'])->name('employees.save-preview');
+    Route::delete('employees/delete-all', [\App\Http\Controllers\EmployeeController::class, 'deleteAll'])->name('employees.delete-all');
+    Route::get('employees/template/download', [\App\Http\Controllers\EmployeeController::class, 'downloadTemplate'])->name('employees.template.download');
     
     // Payroll routes
     Route::get('/payrolls/employees', [App\Http\Controllers\PayrollController::class, 'getEmployees'])->name('payrolls.employees');

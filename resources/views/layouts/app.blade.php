@@ -125,6 +125,12 @@
                         <div data-i18n="employee-summaries">{{ __('employee-summaries') }}</div>
                         </a>
                     </li>
+                    <li class="menu-item {{ request()->routeIs('employees.*') ? 'active' : '' }}">
+                        <a href="{{ route('employees.index') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-group"></i>
+                        <div data-i18n="employee-management">{{ __('employee.management.page_title') }}</div>
+                        </a>
+                    </li>
                     {{-- <li class="menu-item {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
                         <a href="{{ route('payrolls.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-money"></i>

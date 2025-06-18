@@ -856,7 +856,49 @@ $(document).ready(function() {
 
     // Download template
     $('#downloadTemplateBtn').click(function() {
-        window.location.href = '{{ route("employees.template.download") }}';
+        // Create a sample CSV template
+        const headers = [
+            'employee_id',
+            'name', 
+            'company_name',
+            'position',
+            'date_of_birth',
+            'resident_registration_number',
+            'contact_number',
+            'date_of_joining',
+            'employment_duration',
+            'work_days',
+            'base_salary'
+        ];
+        
+        const sampleData = [
+            'EMP001',
+            'John Doe',
+            'Company ABC',
+            'Manager',
+            '1990-01-01',
+            '900101-1234567',
+            '010-1234-5678',
+            '2023-01-01',
+            '1 year',
+            '250',
+            '5000000'
+        ];
+
+        const csvContent = [
+            headers.join(','),
+            sampleData.join(',')
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'employee_template.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     });
 
     // Reset modal when hidden
