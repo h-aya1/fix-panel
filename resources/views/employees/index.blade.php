@@ -2,6 +2,10 @@
 
 @section('title', __('employee.management.page_title'))
 
+@push('head')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+@endpush
+
 @section('page-style')
   <link rel="stylesheet" href="{{ asset('jqwidgets/styles/jqx.base.css') }}" type="text/css" />
   <link rel="stylesheet" href="{{ asset('jqwidgets/styles/jqx.bootstrap.css') }}" type="text/css" />
@@ -464,7 +468,7 @@ $(document).ready(function() {
     function processFileUpload(file) {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}');
 
         $.ajax({
             url: '{{ route("employees.preview") }}',
@@ -476,16 +480,24 @@ $(document).ready(function() {
                 importArea.classList.add('loading');
             },
             success: function(response) {
-                if (response.success) {
+                console.log('Preview response:', response);
+                if (response.success && response.data) {
                     previewData = response.data;
-                    console.log('Preview data received:', previewData); // Debug log
-                    showPreviewModal();
+                    console.log('Preview data received:', previewData);
+                    
+                    if (previewData.rows && previewData.rows.length > 0) {
+                        showPreviewModal();
+                    } else {
+                        showAlert('warning', 'No valid data rows found in the file. Please check your file format.');
+                        resetFileInput();
+                    }
                 } else {
                     showAlert('danger', response.message || 'Failed to process file.');
                     resetFileInput();
                 }
             },
             error: function(xhr) {
+                console.log('Upload error:', xhr);
                 let errorMessage = 'Failed to upload file. Please try again.';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMessage = xhr.responseJSON.message;
@@ -515,8 +527,9 @@ $(document).ready(function() {
     }
 
     function setupPreviewGrid() {
-        if (!previewData || !previewData.rows) {
+        if (!previewData || !previewData.rows || previewData.rows.length === 0) {
             console.log('No preview data available:', previewData);
+            $('#previewGrid').html('<div class="alert alert-warning">No data to preview</div>');
             return;
         }
 
@@ -529,6 +542,7 @@ $(document).ready(function() {
             { text: 'Name', datafield: 'name', width: 120 },
             { text: 'Company Name', datafield: 'company_name', width: 120 },
             { text: 'Position', datafield: 'position', width: 100 },
+            { text: 'Age', datafield: 'age', width: 80 },
             { text: 'Date of Birth', datafield: 'date_of_birth', width: 120 },
             { text: 'Resident Registration Number', datafield: 'resident_registration_number', width: 180 },
             { text: 'Contact Number', datafield: 'contact_number', width: 120 },
@@ -538,12 +552,31 @@ $(document).ready(function() {
             { text: 'Base Salary', datafield: 'base_salary', width: 100 }
         ];
 
+        // Prepare data with all required fields
+        const gridData = previewData.rows.map((row, index) => {
+            return {
+                selected: row.selected !== false, // Default to true unless explicitly false
+                employee_id: row.employee_id || '',
+                name: row.name || '',
+                company_name: row.company_name || '',
+                position: row.position || '',
+                age: row.age || '',
+                date_of_birth: row.date_of_birth || '',
+                resident_registration_number: row.resident_registration_number || '',
+                contact_number: row.contact_number || '',
+                date_of_joining: row.date_of_joining || '',
+                employment_duration: row.employment_duration || '',
+                work_days: row.work_days || '',
+                base_salary: row.base_salary || '',
+                originalIndex: row.row_index !== undefined ? row.row_index : index
+            };
+        });
+
+        console.log('Grid data prepared:', gridData);
+
         const dataAdapter = new $.jqx.dataAdapter({
-            localdata: previewData.rows.map((row, index) => ({
-                ...row,
-                selected: true,
-                originalIndex: index // Keep track of original index for saving
-            }))
+            localdata: gridData,
+            datatype: 'array'
         });
 
         // Clear existing grid
@@ -552,37 +585,45 @@ $(document).ready(function() {
             $('#previewGrid').jqxGrid('destroy');
         } catch (e) {
             // Grid may not exist yet
+            console.log('Grid destroy error (expected on first run):', e);
         }
 
+        // Create the grid
         $('#previewGrid').jqxGrid({
             width: '100%',
-            height: 300,
+            height: 400,
             source: dataAdapter,
             columns: columns,
             columnsresize: true,
             sortable: true,
             filterable: true,
-            selectionmode: 'checkbox'
+            selectionmode: 'checkbox',
+            enabletooltips: true,
+            ready: function() {
+                console.log('Preview grid ready');
+                // Select all rows by default
+                $('#previewGrid').jqxGrid('selectallrows');
+                updateSelectedCount();
+            }
         });
 
-        updateSelectedCount();
-        
-        $('#previewGrid').on('rowselect', function() {
-            updateSelectedCount();
-        });
-        
-        $('#previewGrid').on('rowunselect', function() {
+        // Bind selection events
+        $('#previewGrid').off('rowselect rowunselect').on('rowselect rowunselect', function() {
             updateSelectedCount();
         });
     }
 
     function updateSelectedCount() {
-        const grid = $('#previewGrid');
-        if (grid.length > 0) {
-            const selectedRows = grid.jqxGrid('getselectedrowindexes');
-            const total = previewData.rows.length;
-            $('#selectedCount').text(`${selectedRows.length} of ${total} selected`);
-            $('#saveSelectedBtn').prop('disabled', selectedRows.length === 0);
+        try {
+            const grid = $('#previewGrid');
+            if (grid.length > 0 && typeof grid.jqxGrid === 'function') {
+                const selectedRows = grid.jqxGrid('getselectedrowindexes');
+                const total = previewData.rows ? previewData.rows.length : 0;
+                $('#selectedCount').text(`${selectedRows.length} of ${total} selected`);
+                $('#saveSelectedBtn').prop('disabled', selectedRows.length === 0);
+            }
+        } catch (e) {
+            console.log('Error updating selected count:', e);
         }
     }
 
@@ -605,15 +646,29 @@ $(document).ready(function() {
             return;
         }
 
+        // Get the original row indexes for the selected rows
+        const selectedOriginalIndexes = [];
+        selectedIndexes.forEach(function(gridIndex) {
+            const rowData = $('#previewGrid').jqxGrid('getrowdata', gridIndex);
+            if (rowData && rowData.originalIndex !== undefined) {
+                selectedOriginalIndexes.push(rowData.originalIndex);
+            } else {
+                selectedOriginalIndexes.push(gridIndex); // Fallback to grid index
+            }
+        });
+
+        console.log('Selected grid indexes:', selectedIndexes);
+        console.log('Selected original indexes:', selectedOriginalIndexes);
+
         const formData = new FormData();
         formData.append('file', selectedFile);
         
-        // Append each selected row index as a separate array element
-        selectedIndexes.forEach(function(index) {
+        // Append each selected row index
+        selectedOriginalIndexes.forEach(function(index) {
             formData.append('selected_rows[]', index);
         });
         
-        formData.append('_token', '{{ csrf_token() }}');
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}');
 
         $.ajax({
             url: '{{ route("employees.save-preview") }}',
@@ -625,6 +680,7 @@ $(document).ready(function() {
                 $('#saveSelectedBtn').prop('disabled', true).text('Importing...');
             },
             success: function(response) {
+                console.log('Save response:', response);
                 if (response.success) {
                     showAlert('success', `${response.imported_count} employees imported successfully!`);
                     bootstrap.Modal.getInstance(document.getElementById('previewModal')).hide();
@@ -635,6 +691,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
+                console.log('Save error:', xhr);
                 let errorMessage = 'Failed to import employees. Please try again.';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     errorMessage = xhr.responseJSON.message;
@@ -677,9 +734,9 @@ $(document).ready(function() {
         const columns = [
             { text: 'Employee ID', datafield: 'employee_id', width: 100 },
             { text: 'Name', datafield: 'name', width: 120 },
-            { text: 'Company Name', datafield: 'company_name', width: 120 },
+            { text: 'Company Name', datafield: 'work_location', width: 120 },
             { text: 'Position', datafield: 'position', width: 100 },
-            { text: 'Date of Birth', datafield: 'date_of_birth', width: 120 },
+            { text: 'Age', datafield: 'age', width: 120 },
             { text: 'Resident Registration Number', datafield: 'resident_registration_number', width: 180 },
             { text: 'Contact Number', datafield: 'contact_number', width: 120 },
             { text: 'Date of Joining', datafield: 'date_of_joining', width: 120 },
