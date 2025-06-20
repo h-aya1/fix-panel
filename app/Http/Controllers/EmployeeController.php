@@ -479,6 +479,7 @@ class EmployeeController extends Controller
                         'uid' => Str::uuid()->toString(),
                         'employee_id' => $employeeId,
                         'name' => $processedRow['name'] ?? 'Unknown',
+                        'company_name' => $processedRow['company_name'] ?? null,
                         'work_location' => $processedRow['company_name'] ?? null,
                         'position' => $processedRow['position'] ?? 'Unknown',
                         'age' => $this->parseInteger($processedRow['age'] ?? null),

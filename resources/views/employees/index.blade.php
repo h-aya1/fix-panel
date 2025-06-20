@@ -587,13 +587,13 @@ $(document).ready(function() {
         });
 
         // Clear existing grid
-        try {
-            $('#previewGrid').jqxGrid('clear');
-            $('#previewGrid').jqxGrid('destroy');
-        } catch (e) {
-            // Grid may not exist yet
-            console.log('Grid destroy error (expected on first run):', e);
-        }
+        // try {
+        //     $('#previewGrid').jqxGrid('clear');
+        //     $('#previewGrid').jqxGrid('destroy');
+        // } catch (e) {
+        //     // Grid may not exist yet
+        //     console.log('Grid destroy error (expected on first run):', e);
+        // }
 
         // Create the grid
         $('#previewGrid').jqxGrid({
@@ -721,12 +721,14 @@ $(document).ready(function() {
             data: company ? { company: company } : {},
             success: function(data) {
                 employeeData = data || [];
+                $('#employeeGrid').jqxGrid('clear');
                 setupGrid();
                 updateStats && updateStats();
                 toggleEmptyState && toggleEmptyState();
             },
             error: function() {
                 employeeData = [];
+                $('#employeeGrid').jqxGrid('clear');
                 setupGrid();
                 updateStats && updateStats();
                 toggleEmptyState && toggleEmptyState();
@@ -736,9 +738,12 @@ $(document).ready(function() {
 
     function setupGrid() {
         if (employeeData.length === 0) {
-            $('#employeeGrid').empty();
+            $('#employeeGrid').hide();
+            $('#emptyState').show();
             return;
         }
+        $('#emptyState').hide();
+        $('#employeeGrid').show();
 
         const columns = [
             { text: 'Employee ID', datafield: 'employee_id', width: 100 },
@@ -776,11 +781,11 @@ $(document).ready(function() {
         });
 
         // Clear and reinitialize grid
-        try {
-            $('#employeeGrid').jqxGrid('destroy');
-        } catch (e) {
-            // Grid may not exist yet
-        }
+        // try {
+        //     $('#employeeGrid').jqxGrid('destroy');
+        // } catch (e) {
+        //     // Grid may not exist yet
+        // }
         
         $('#employeeGrid').jqxGrid({
             width: '100%',
@@ -794,7 +799,7 @@ $(document).ready(function() {
             enabletooltips: true,
             ready: function() {
                 // Bind action buttons after grid is ready
-                bindActionButtons();
+                bindActionButtons && bindActionButtons();
             }
         });
     }
