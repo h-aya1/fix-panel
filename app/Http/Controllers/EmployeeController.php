@@ -15,12 +15,25 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
+        // Get unique company names for filter
+        $companyNames = Employee::query()
+            ->select('work_location')
+            ->distinct()
+            ->whereNotNull('work_location')
+            ->where('work_location', '!=', '')
+            ->orderBy('work_location')
+            ->pluck('work_location');
+
         if ($request->ajax()) {
-            $employees = Employee::all();
+            $query = Employee::query();
+            if ($request->has('company') && $request->company) {
+                $query->where('work_location', $request->company);
+            }
+            $employees = $query->get();
             return response()->json($employees);
         }
         $employees = Employee::all();
-        return view('employees.index', compact('employees'));
+        return view('employees.index', compact('employees', 'companyNames'));
     }
 
     public function create()

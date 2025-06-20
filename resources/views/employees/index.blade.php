@@ -252,9 +252,16 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="action-buttons-top" id="actionButtons" style="display: none;">
+    <div class="action-buttons-top mb-3" id="actionButtons" style="display: none;">
         <div class="left-actions">
             <span id="recordCount" class="text-muted">{{ __('employee.management.total_employees_display', ['count' => 0]) }}</span>
+            <label for="companyFilter" class="me-2">Filter by Company:</label>
+            <select id="companyFilter" class="form-select d-inline-block w-auto">
+                <option value="">All Companies</option>
+                @foreach($companyNames as $company)
+                    <option value="{{ $company }}">{{ $company }}</option>
+                @endforeach
+            </select>
         </div>
         <div class="right-actions">
             <button type="button" class="btn btn-danger btn-sm" id="deleteAllBtn">
@@ -706,21 +713,23 @@ $(document).ready(function() {
 
     // Load employees data
     function loadEmployees() {
+        const company = $('#companyFilter').val();
         $.ajax({
-            url: '{{ route("employees.index") }}',
+            url: '{{ route('employees.index') }}',
             method: 'GET',
             dataType: 'json',
+            data: company ? { company: company } : {},
             success: function(data) {
                 employeeData = data || [];
                 setupGrid();
-                updateStats();
-                toggleEmptyState();
+                updateStats && updateStats();
+                toggleEmptyState && toggleEmptyState();
             },
             error: function() {
                 employeeData = [];
                 setupGrid();
-                updateStats();
-                toggleEmptyState();
+                updateStats && updateStats();
+                toggleEmptyState && toggleEmptyState();
             }
         });
     }
@@ -977,6 +986,11 @@ $(document).ready(function() {
             // Grid may not exist
         }
         previewData = [];
+    });
+
+    // Company filter event
+    $('#companyFilter').on('change', function() {
+        loadEmployees();
     });
 
     function showAlert(type, message) {
