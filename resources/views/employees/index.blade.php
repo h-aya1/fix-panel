@@ -807,6 +807,7 @@ $(document).ready(function() {
         $('#employeeGrid').show();
 
         const columns = [
+            { text: '', datafield: 'selected', columntype: 'checkbox', width: 50 },
             { text: 'Employee ID', datafield: 'employee_id', width: 100 },
             { text: 'Name', datafield: 'name', width: 120 },
             { text: 'Department', datafield: 'work_location', width: 120 },
