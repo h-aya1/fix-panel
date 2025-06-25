@@ -583,19 +583,19 @@ $(document).ready(function() {
         console.log('Preview rows:', previewData.rows);
 
         const columns = [
-            { text: '', datafield: 'selected', columntype: 'checkbox', width: 50 },
-            { text: 'Employee ID', datafield: 'employee_id', width: 100 },
-            { text: 'Name', datafield: 'name', width: 120 },
-            { text: 'Company Name', datafield: 'company_name', width: 120 },
-            { text: 'Position', datafield: 'position', width: 100 },
-            { text: 'Age', datafield: 'age', width: 80 },
-            { text: 'Date of Birth', datafield: 'date_of_birth', width: 120 },
-            { text: 'Resident Registration Number', datafield: 'resident_registration_number', width: 180 },
-            { text: 'Contact Number', datafield: 'contact_number', width: 120 },
-            { text: 'Date of Joining', datafield: 'date_of_joining', width: 120 },
-            { text: 'Employment Duration', datafield: 'employment_duration', width: 120 },
-            { text: 'Work Days', datafield: 'work_days', width: 100 },
-            { text: 'Base Salary', datafield: 'base_salary', width: 100 }
+            { text: '', datafield: 'selected', columntype: 'checkbox', },
+            { text: 'Employee ID', datafield: 'employee_id', },
+            { text: 'Name', datafield: 'name', },
+            { text: 'Company Name', datafield: 'company_name', },
+            { text: 'Position', datafield: 'position', },
+            { text: 'Age', datafield: 'age', },
+            { text: 'Date of Birth', datafield: 'date_of_birth', },
+            { text: 'Resident Registration Number', datafield: 'resident_registration_number', },
+            { text: 'Contact Number', datafield: 'contact_number', },
+            { text: 'Date of Joining', datafield: 'date_of_joining', },
+            { text: 'Employment Duration', datafield: 'employment_duration', },
+            { text: 'Work Days', datafield: 'work_days', },
+            { text: 'Base Salary', datafield: 'base_salary',  }
         ];
 
         // Prepare data with all required fields
@@ -807,21 +807,20 @@ $(document).ready(function() {
         $('#employeeGrid').show();
 
         const columns = [
-            { text: '', datafield: 'selected', columntype: 'checkbox', width: 50 },
-            { text: 'Employee ID', datafield: 'employee_id', width: 100 },
-            { text: 'Name', datafield: 'name', width: 120 },
-            { text: 'Department', datafield: 'work_location', width: 120 },
-            { text: 'Position', datafield: 'position', width: 100 },
-            { text: 'Age', datafield: 'age', width: 80 },
-            { text: 'Resident ID Number', datafield: 'resident_registration_number', width: 180 },
-            { text: 'Contact Number', datafield: 'contact_number', width: 120 },
-            { text: 'Date of Joining', datafield: 'date_of_joining', width: 120 },
-            { text: 'Employment Duration', datafield: 'employment_duration', width: 120 },
-            { text: 'Base Salary', datafield: 'base_salary', width: 100 },
+            { text: '', datafield: 'selected', columntype: 'checkbox' },
+            { text: 'Employee ID', datafield: 'employee_id' },
+            { text: 'Name', datafield: 'name' },
+            { text: 'Department', datafield: 'work_location' },
+            { text: 'Position', datafield: 'position' },
+            { text: 'Age', datafield: 'age' },
+            { text: 'Resident ID Number', datafield: 'resident_registration_number' },
+            { text: 'Contact Number', datafield: 'contact_number' },
+            { text: 'Date of Joining', datafield: 'date_of_joining' },
+            { text: 'Employment Duration', datafield: 'employment_duration' },
+            { text: 'Base Salary', datafield: 'base_salary' },
             { 
                 text: 'Status', 
                 datafield: 'employment_status_key', 
-                width: 100, 
                 cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata) {
                     const status = rowdata.employment_status_key || 'active';
                     const statusClass = {
@@ -836,7 +835,6 @@ $(document).ready(function() {
             { 
                 text: 'Actions', 
                 datafield: 'actions', 
-                width: 100, 
                 cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata) {
                     return `
                         <div class="d-flex gap-1">
@@ -864,11 +862,10 @@ $(document).ready(function() {
         // }
         
         $('#employeeGrid').jqxGrid({
-            width: '100%',
+            width: '98%',
             height: 400,
             source: dataAdapter,
             columns: columns,
-            columnsresize: true,
             sortable: true,
             filterable: true,
             selectionmode: 'none',
