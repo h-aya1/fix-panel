@@ -255,17 +255,56 @@
     <div class="action-buttons-top mb-3" id="actionButtons" style="display: none;">
         <div class="left-actions">
             <span id="recordCount" class="text-muted">{{ __('employee.management.total_employees_display', ['count' => 0]) }}</span>
-            <label for="companyFilter" class="me-2">Filter by Company:</label>
-            <select id="companyFilter" class="form-select d-inline-block w-auto">
-                <option value="">All Companies</option>
+        </div>
+        <div class="right-actions">
+            <button type="button" class="btn btn-danger btn-sm" id="deleteAllBtn">
+                <i class="bx bx-trash me-1"></i>{{ __('Delete All') }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters Row -->
+    <div class="row mb-3" id="filtersRow" style="display: none;">
+        <div class="col-md-3">
+            <label for="companyFilter" class="form-label small">Department</label>
+            <select id="companyFilter" class="form-select form-select-sm">
+                <option value="">All Departments</option>
                 @foreach($companyNames as $company)
                     <option value="{{ $company }}">{{ $company }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="right-actions">
-            <button type="button" class="btn btn-danger btn-sm" id="deleteAllBtn">
-                <i class="bx bx-trash me-1"></i>{{ __('Delete All') }}
+        <div class="col-md-3">
+            <label for="positionFilter" class="form-label small">Position</label>
+            <select id="positionFilter" class="form-select form-select-sm">
+                <option value="">All Positions</option>
+                @foreach($positions as $position)
+                    <option value="{{ $position }}">{{ $position }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="statusFilter" class="form-label small">Status</label>
+            <select id="statusFilter" class="form-select form-select-sm">
+                <option value="">All Status</option>
+                @foreach($statuses as $status)
+                    <option value="{{ $status }}">{{ ucfirst($status) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label for="durationFilter" class="form-label small">Employment Duration</label>
+            <select id="durationFilter" class="form-select form-select-sm">
+                <option value="">All Durations</option>
+                <option value="less_than_1">Less than 1 year</option>
+                <option value="1_to_3">1-3 years</option>
+                <option value="3_to_5">3-5 years</option>
+                <option value="more_than_5">More than 5 years</option>
+            </select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFiltersBtn" title="Clear All Filters">
+                <i class="bx bx-refresh"></i>
             </button>
         </div>
     </div>
@@ -713,22 +752,44 @@ $(document).ready(function() {
 
     // Load employees data
     function loadEmployees() {
-        const company = $('#companyFilter').val();
+        const filters = {
+            company: $('#companyFilter').val(),
+            position: $('#positionFilter').val(),
+            status: $('#statusFilter').val(),
+            duration: $('#durationFilter').val()
+        };
+        
+        // Remove empty filters
+        const data = {};
+        Object.keys(filters).forEach(key => {
+            if (filters[key]) {
+                data[key] = filters[key];
+            }
+        });
+        
         $.ajax({
             url: '{{ route('employees.index') }}',
             method: 'GET',
             dataType: 'json',
-            data: company ? { company: company } : {},
+            data: data,
             success: function(data) {
                 employeeData = data || [];
-                $('#employeeGrid').jqxGrid('clear');
+                try {
+                    $('#employeeGrid').jqxGrid('clear');
+                } catch (e) {
+                    // Grid may not exist yet
+                }
                 setupGrid();
                 updateStats && updateStats();
                 toggleEmptyState && toggleEmptyState();
             },
             error: function() {
                 employeeData = [];
-                $('#employeeGrid').jqxGrid('clear');
+                try {
+                    $('#employeeGrid').jqxGrid('clear');
+                } catch (e) {
+                    // Grid may not exist yet
+                }
                 setupGrid();
                 updateStats && updateStats();
                 toggleEmptyState && toggleEmptyState();
@@ -748,19 +809,33 @@ $(document).ready(function() {
         const columns = [
             { text: 'Employee ID', datafield: 'employee_id', width: 100 },
             { text: 'Name', datafield: 'name', width: 120 },
-            { text: 'Company Name', datafield: 'work_location', width: 120 },
+            { text: 'Department', datafield: 'work_location', width: 120 },
             { text: 'Position', datafield: 'position', width: 100 },
-            { text: 'Age', datafield: 'age', width: 120 },
-            { text: 'Resident Registration Number', datafield: 'resident_registration_number', width: 180 },
+            { text: 'Age', datafield: 'age', width: 80 },
+            { text: 'Resident ID Number', datafield: 'resident_registration_number', width: 180 },
             { text: 'Contact Number', datafield: 'contact_number', width: 120 },
             { text: 'Date of Joining', datafield: 'date_of_joining', width: 120 },
             { text: 'Employment Duration', datafield: 'employment_duration', width: 120 },
-            { text: 'Work Days', datafield: 'work_days', width: 100 },
             { text: 'Base Salary', datafield: 'base_salary', width: 100 },
+            { 
+                text: 'Status', 
+                datafield: 'employment_status_key', 
+                width: 100, 
+                cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata) {
+                    const status = rowdata.employment_status_key || 'active';
+                    const statusClass = {
+                        active: 'badge bg-success',
+                        resigning: 'badge bg-warning',
+                        resigned: 'badge bg-secondary',
+                        on_leave: 'badge bg-info'
+                    }[status] || 'badge bg-secondary';
+                    return `<span class="${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+                }
+            },
             { 
                 text: 'Actions', 
                 datafield: 'actions', 
-                width: 80, 
+                width: 100, 
                 cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata) {
                     return `
                         <div class="d-flex gap-1">
@@ -830,7 +905,7 @@ $(document).ready(function() {
     function populateEditForm(employee) {
         $('#employee_id').val(employee.employee_id);
         $('#name').val(employee.name);
-        $('#company_name').val(employee.company_name);
+        $('#company_name').val(employee.work_location);
         $('#position').val(employee.position);
         $('#age').val(employee.age);
         $('#resident_registration_number').val(employee.resident_registration_number);
@@ -889,11 +964,13 @@ $(document).ready(function() {
     function toggleEmptyState() {
         if (employeeData.length === 0) {
             $('#emptyState').show();
-            $('#actionButtons, #gridContainer').hide();
+            // $('#actionButtons, #filtersRow, #gridContainer').hide();
         } else {
             $('#emptyState').hide();
-            $('#actionButtons, #gridContainer').show();
+            // 
         }
+
+        $('#actionButtons, #filtersRow, #gridContainer').show();
     }
 
     // Add/Edit employee modal
@@ -993,8 +1070,14 @@ $(document).ready(function() {
         previewData = [];
     });
 
-    // Company filter event
-    $('#companyFilter').on('change', function() {
+    // Filter events
+    $('#companyFilter, #positionFilter, #statusFilter, #durationFilter').on('change', function() {
+        loadEmployees();
+    });
+
+    // Clear filters
+    $('#clearFiltersBtn').on('click', function() {
+        $('#companyFilter, #positionFilter, #statusFilter, #durationFilter').val('');
         loadEmployees();
     });
 

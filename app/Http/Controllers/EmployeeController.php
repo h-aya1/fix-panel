@@ -15,7 +15,7 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        // Get unique company names for filter
+        // Get filter options
         $companyNames = Employee::query()
             ->select('work_location')
             ->distinct()
@@ -24,16 +24,61 @@ class EmployeeController extends Controller
             ->orderBy('work_location')
             ->pluck('work_location');
 
+        $positions = Employee::query()
+            ->select('position')
+            ->distinct()
+            ->whereNotNull('position')
+            ->where('position', '!=', '')
+            ->orderBy('position')
+            ->pluck('position');
+
+        $statuses = Employee::query()
+            ->select('employment_status_key')
+            ->distinct()
+            ->whereNotNull('employment_status_key')
+            ->where('employment_status_key', '!=', '')
+            ->orderBy('employment_status_key')
+            ->pluck('employment_status_key');
+
         if ($request->ajax()) {
             $query = Employee::query();
+            
+            // Apply filters
             if ($request->has('company') && $request->company) {
                 $query->where('work_location', $request->company);
             }
+            
+            if ($request->has('position') && $request->position) {
+                $query->where('position', $request->position);
+            }
+            
+            if ($request->has('status') && $request->status) {
+                $query->where('employment_status_key', $request->status);
+            }
+            
+            if ($request->has('duration') && $request->duration) {
+                switch ($request->duration) {
+                    case 'less_than_1':
+                        $query->whereRaw('DATEDIFF(CURDATE(), date_of_joining) < 365');
+                        break;
+                    case '1_to_3':
+                        $query->whereRaw('DATEDIFF(CURDATE(), date_of_joining) >= 365 AND DATEDIFF(CURDATE(), date_of_joining) < 1095');
+                        break;
+                    case '3_to_5':
+                        $query->whereRaw('DATEDIFF(CURDATE(), date_of_joining) >= 1095 AND DATEDIFF(CURDATE(), date_of_joining) < 1825');
+                        break;
+                    case 'more_than_5':
+                        $query->whereRaw('DATEDIFF(CURDATE(), date_of_joining) >= 1825');
+                        break;
+                }
+            }
+            
             $employees = $query->get();
             return response()->json($employees);
         }
+        
         $employees = Employee::all();
-        return view('employees.index', compact('employees', 'companyNames'));
+        return view('employees.index', compact('employees', 'companyNames', 'positions', 'statuses'));
     }
 
     public function create()
