@@ -15,51 +15,77 @@ class EmployeeSummaryController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->ajax()) {
-            $query = EmployeeSummary::query();
-            
-            // Apply company filter if provided
-            if ($request->has('company') && $request->company !== '') {
-                $query->where('company_name', $request->company);
-            }
-            
-            $summaries = $query->orderBy('created_at', 'desc')->get();
-            
-            // Add employment duration to each record
-            $summaries->each(function ($summary) {
-                $summary->employment_duration = $summary->employment_duration;
-            });
-            
-            return response()->json($summaries);
-        }
-
+        // --- 1. Main Query with Filters ---
         $query = EmployeeSummary::query();
-        
-        // Apply company filter if provided
-        if ($request->has('company') && $request->company !== '') {
-            $query->where('company_name', $request->company);
+
+        if ($request->filled('company')) {
+            $query->where('company_name', $request->input('company'));
+        }
+        if ($request->filled('positions')) {
+            $query->whereIn('position', (array)$request->input('positions'));
+        }
+        if ($request->filled('statuses')) {
+            $query->whereIn('employment_status', (array)$request->input('statuses'));
         }
 
-        $summaries = $query->orderBy('created_at', 'desc')->paginate(50);
-        
-        // Add employment duration to each record in the collection
-        $summaries->getCollection()->transform(function ($summary) {
-            $summary->employment_duration = $summary->employment_duration;
-            return $summary;
-        });
-        
+        // --- 2. Get Employees & Paginate for Grid ---
+        $summaries = $query->orderBy('position')->orderBy('name')->paginate(50);
+        $employees = $query->orderBy('position')->orderBy('name')->get();
+
+        // --- 3. Prepare Data for Charts ---
+        $allStatuses = ['working', 'resigned', 'on_leave', 'resign_soon'];
+        $employeeStats = collect($allStatuses)->mapWithKeys(function ($status) {
+            return [$status => 0];
+        })->merge($employees->countBy('employment_status'));
+
+        $totalEmployeesForRatio = $employees->count();
+        $positionStats = $employees->groupBy('position')->map(function ($group, $position) use ($totalEmployeesForRatio) {
+            return [
+                'position' => $position,
+                'count' => $group->count(),
+                'ratio' => $totalEmployeesForRatio ? round($group->count() / $totalEmployeesForRatio * 100, 1) : 0
+            ];
+        })->values();
+
+        // --- 4. Group Employees by Position for Table ---
+        $groupedEmployees = $employees->groupBy('position');
+
+        // --- 5. Dropdown Data ---
+        $companies = EmployeeSummary::select('company_name')
+            ->distinct()
+            ->whereNotNull('company_name')
+            ->get()
+            ->pluck('company_name')
+            ->sort();
+
+        $positions = EmployeeSummary::select('position')
+            ->distinct()
+            ->whereNotNull('position')
+            ->get()
+            ->pluck('position')
+            ->sort();
+
+        $statuses = EmployeeSummary::select('employment_status')
+            ->distinct()
+            ->whereNotNull('employment_status')
+            ->get()
+            ->pluck('employment_status')
+            ->sort();
+
+        // --- 6. Total Records ---
         $totalRecords = EmployeeSummary::count();
-        $latestImport = EmployeeSummary::latest('imported_at')->first();
-        
-        // Get distinct companies for filter dropdown
-        $companies = EmployeeSummary::whereNotNull('company_name')
-                                   ->where('company_name', '!=', '')
-                                   ->distinct()
-                                   ->pluck('company_name')
-                                   ->sort()
-                                   ->values();
-        
-        return view('employee-summaries.index', compact('summaries', 'totalRecords', 'latestImport', 'companies'));
+
+        // --- 7. Pass Data to View ---
+        return view('employee-summaries.index', [
+            'summaries' => $summaries,
+            'groupedEmployees' => $groupedEmployees,
+            'employeeStats' => $employeeStats,
+            'positionStats' => $positionStats,
+            'companies' => $companies,
+            'positions' => $positions,
+            'statuses' => $statuses,
+            'totalRecords' => $totalRecords,
+        ]);
     }
 
     /**

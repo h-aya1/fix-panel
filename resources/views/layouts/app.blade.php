@@ -122,13 +122,13 @@
                     <li class="menu-item {{ request()->routeIs('employee-summaries.*') ? 'active' : '' }}">
                         <a href="{{ route('employee-summaries.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-user"></i>
-                        <div data-i18n="employee-summaries">{{ __('employee-summaries') }}</div>
+                        <div data-i18n="employee-managemnet">{{ __('employee-managemnet') }}</div>
                         </a>
                     </li>
                     <li class="menu-item {{ request()->routeIs('employees.*') ? 'active' : '' }}">
                         <a href="{{ route('employees.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-group"></i>
-                        <div data-i18n="employee-management">{{ __('employee.management.page_title') }}</div>
+                        <div data-i18n="salary-management">{{ __('salary-management') }}</div>
                         </a>
                     </li>
                     {{-- <li class="menu-item {{ request()->routeIs('payrolls.*') ? 'active' : '' }}">
@@ -168,5 +168,6 @@
     <script src="{{ asset('templates/assets/js/main.js') }}"></script>
     <!-- Page JS -->
     @yield('page-script')
+    @stack('scripts')
 </body>
 </html>

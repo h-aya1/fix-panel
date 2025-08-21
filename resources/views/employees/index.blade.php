@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('employee.management.page_title'))
+@section('title', 'Employee Summaries')
 
 @push('head')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -11,418 +11,636 @@
   <link rel="stylesheet" href="{{ asset('jqwidgets/styles/jqx.bootstrap.css') }}" type="text/css" />
   <style>
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-family: -apple-system, CryillicMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         font-size: 0.9rem;
+        background-color: #f4f6f9;
     }
     .page-header {
         display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #dee2e6;
+        margin-bottom: 1.5rem;
     }
     .header-main-title { font-size: 1.65rem; font-weight: 600; }
-    .header-sub-title { font-size: 0.85rem; color: #6c757d; }
-
-    /* Import Area Styles */
-    .import-area {
-        border: 2px dashed #adb5bd; 
-        padding: 25px 20px; 
-        text-align: center;
-        margin-bottom: 1.5rem; 
-        background-color: #f8f9fa; 
-        border-radius: 0.5rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    .import-area:hover {
-        border-color: #0d6efd;
-        background-color: #f0f8ff;
-    }
-    .import-area.dragover {
-        border-color: #0d6efd;
-        background-color: #e3f2fd;
-        transform: scale(1.02);
-    }
-    .upload-icon {
-        width: 48px; 
-        height: 48px; 
-        background-color: #e9ecef; 
-        margin: 0 auto 12px auto;
-        border-radius: 50%; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        color: #495057;
-        font-size: 24px;
-    }
-    .import-area p { 
-        margin-bottom: 0.75rem; 
-        color: #495057; 
-        font-size: 0.9rem; 
-    }
-    .import-area .drag-hint {
-        color: #6c757d;
-        font-size: 0.8rem;
-        margin-top: 0.5rem;
-    }
-
-    /* Grid and Action Styles */
-    .action-buttons-top {
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center;
-        margin-bottom: 1rem; 
-        flex-wrap: wrap; 
-        gap: 0.75rem;
-    }
-    .action-buttons-top .btn, .page-header .btn {
-        font-size: 0.8rem; 
-        padding: 0.4rem 0.8rem; 
-        border-radius: 0.25rem;
-    }
-    .action-buttons-top .left-actions .btn {
-        border: 1px solid #ced4da; 
-        color: #495057; 
-        background-color: #fff;
-    }
-    .action-buttons-top .left-actions .btn:hover { 
-        background-color: #e9ecef; 
-    }
-    .action-buttons-top .left-actions .btn.active {
-        background-color: #0d6efd; 
-        color: white; 
-        border-color: #0d6efd;
-    }
-    .btn-primary { 
-        background-color: #0d6efd; 
-        border-color: #0d6efd; 
-    }
-    .btn-primary:hover { 
-        background-color: #0b5ed7; 
-        border-color: #0a58ca; 
-    }
-    .btn-danger { 
-        background-color: #dc3545; 
-        border-color: #dc3545; 
-    }
-    .btn-danger:hover { 
-        background-color: #c82333; 
-        border-color: #bd2130; 
-    }
-
-    /* Empty State Styles */
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: #6c757d;
-    }
-    .empty-state .empty-icon {
-        font-size: 4rem;
-        color: #dee2e6;
-        margin-bottom: 1rem;
-    }
-    .empty-state h4 {
-        color: #495057;
-        margin-bottom: 1rem;
-    }
-    .empty-state p {
-        margin-bottom: 2rem;
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* Grid Container */
-    .grid-container {
+    
+    /* Main Content Area */
+    .grid-wrapper {
         background: white;
         border-radius: 0.5rem;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        padding: 1rem;
-    }
-
-    /* Statistics Cards */
-    .stats-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    .stats-card {
-        background: white;
         padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #dee2e6;
-        text-align: center;
-    }
-    .stats-card .stats-value {
-        font-size: 1.75rem;
-        font-weight: 600;
-        color: #0d6efd;
-        margin-bottom: 0.5rem;
-    }
-    .stats-card .stats-label {
-        color: #6c757d;
-        font-size: 0.875rem;
     }
 
-    /* Modal Styles */
-    .modal-content {
-        border-radius: 0.5rem;
+    /* Action Bar Styles */
+    .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
-    .modal-header {
-        border-bottom: 1px solid #dee2e6;
-        background-color: #f8f9fa;
+    .action-bar .left-actions, .action-bar .right-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
-    .modal-footer {
-        border-top: 1px solid #dee2e6;
-        background-color: #f8f9fa;
+    .search-bar {
+        width: 250px;
     }
-
-    /* Form Styles */
-    .form-control, .form-select {
-        border-radius: 0.375rem;
+    .total-count {
+        font-weight: 500;
+        color: #495057;
+    }
+    /* Specific style for Send SMS button */
+    #sendSmsBtn {
+        background-color: transparent;
         border: 1px solid #ced4da;
+        color: #212529;
     }
-    .form-control:focus, .form-select:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    #sendSmsBtn:hover {
+        background-color: #f8f9fa;
     }
+    
+    /* Grid Customizations */
+    .jqx-grid-cell {
+        cursor: pointer;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 0.25em 0.6em;
+        font-size: 75%;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+        color: #fff;
+    }
+    .status-working { background-color: #28a745; }
+    .status-resigning { background-color: #ffc107; color: #212529; }
+    .제status-on-leave { background-color: #17a2b8; }
+    .sms-status-sent { color: #28a745; font-size: 1.2rem;}
+    .sms-status-pending { color: #dc3545; font-size: 1.2rem;}
 
     /* Hidden input */
     #fileInput {
         display: none;
     }
 
-    /* Loading states */
-    .loading {
-        opacity: 0.6;
-        pointer-events: none;
+    /* Side Panel for Editing Allowance/Deduction */
+    .side-panel {
+        position: fixed;
+        top: 0;
+        right: -450px; /* Initially hidden */
+        width: 450px;
+        height: 100%;
+        background: #fff;
+        box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+        z-index: 1055;
+        transition: right 0.3s ease-in-out;
+        display: flex;
+        flex-direction: column;
+    }
+    .side-panel.open {
+        right: 0;
+    }
+    .panel-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .panel-header h5 { margin: 0; }
+    .panel-body {
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    .panel-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        text-align: right;
+    }
+    .details-section { margin-bottom: 1.5rem; }
+    .details-section h6 { font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    .detail-item label { color: #6c757d; }
+    .detail-item input {
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        width: 150px;
+        text-align: right;
+    }
+    
+    /* SMS Preview Modal Styles */
+    .sms-modal-body {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
     }
 
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .action-buttons-top {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .action-buttons-top .left-actions,
-        .action-buttons-top .right-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .stats-cards {
-            grid-template-columns: 1fr;
-        }
+    .sms-recipients-section {
+        flex: 0 0 53%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .recipient-table-wrapper {
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        height: 400px; /* Reduced height */
+        overflow-y: auto;
+    }
+
+    .recipient-table-wrapper table {
+        margin-bottom: 0;
+    }
+
+    .recipient-table-wrapper tbody tr {
+        cursor: pointer;
+    }
+
+    .recipient-table-wrapper tbody tr.selected {
+        background-color: #ffeeba; /* A light yellow to indicate selection */
+    }
+
+    .sms-preview-section {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .iphone-mockup {
+        width: 250px; /* Scaled up for better visibility */
+        height: 530px; /* Scaled up for better visibility */
+        margin: 0 auto;
+        border: 5px solid #111;
+        border-radius: 45px;
+        background: #111;
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+
+    /* Screen area */
+    .iphone-screen {
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        border-radius: 32px;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Notch */
+    .iphone-notch { /* Dynamic Island */
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90px;
+        height: 25px;
+        background: #111;
+        border-radius: 12px;
+        z-index: 5;
+    }
+
+    /* Status Bar */
+    .iphone-status-bar {
+        position: absolute;
+        top: 12px;
+        left: 13px;
+        right: 13px;
+        padding: 0 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #000;
+        z-index: 6;
+    }
+
+    .status-icons {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+    }
+
+    .sms-message-header {
+        position: absolute;
+        top: 40px; /* Below status bar */
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Center the recipient info */
+        padding: 4px 15px; /* Reduced padding */
+        border-bottom: 1px solid #e5e5e5;
+        background: #f7f7f7;
+    }
+
+    .sms-message-header .back-link {
+        position: absolute;
+        left: 15px;
+        font-size: 0.8rem;
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .recipient-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .recipient-avatar {
+        width: 30px; /* Reduced size */
+        height: 30px; /* Reduced size */
+        background-color: #d8d8d8;
+        border-radius: 50%;
+        margin-bottom: 3px; /* Reduced margin */
+        position: relative;
+    }
+    .recipient-avatar::before {
+        content: '';
+        position: absolute;
+        top: 6px; /* Adjusted position */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px; /* Adjusted size */
+        height: 12px; /* Adjusted size */
+        background: #fff;
+        border-radius: 50%;
+    }
+     .recipient-avatar::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 21px; /* Adjusted size */
+        height: 11px; /* Adjusted size */
+        background: #fff;
+        border-top-left-radius: 11px; /* Adjusted size */
+        border-top-right-radius: 11px; /* Adjusted size */
+    }
+
+    .recipient-name {
+        font-size: 0.75rem;
+        color: #888;
+    }
+
+ 
+    .iphone-status-bar .icons {
+        font-size: 0.7rem;
+    }
+
+    /* Side Buttons */
+    .iphone-buttons {
+        position: absolute;
+        left: -5px;
+        top: 100px;
+        width: 5px;
+        height: 50px;
+        border-radius: 2px;
+        background: #333;
+        box-shadow: 1px 0 2px rgba(0,0,0,0.3);
+    }
+
+    .sms-content {
+        padding: 15px 10px;
+        font-size: 0.7rem;
+        white-space: pre-wrap;
+        line-height: 1.4;
+        flex-grow: 1;
+        overflow-y: auto; /* Allow scrolling if content overflows */
+        color: #000;
+        margin-top: 95px; /* Reduced margin to bring content up */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sms-timestamp {
+        text-align: center;
+        font-size: 0.4rem;
+        color: #888;
+        margin-top: 0px;
+        margin-bottom: 6px;
+        padding: 2px 8px;
+        background-color: #f0f0f0;
+        border-radius: 10px;
+        align-self: center;
+    }
+
+    .sms-bubble {
+        background-color: #E9E9EB;
+        border-radius: 18px;
+        padding: 0px 14px;
+        max-width: 97%;
+        margin-bottom: 5px;
+        font-size: 0.72rem;
+        line-height: 1.3;
+        /* word-wrap: break-word; */
+        color: #000;
+    }
+
+    .sms-bubble strong {
+        font-weight: 500;
+    }
+
+    .sms-bubble a {
+        color: #007bff;
+        text-decoration: none;
+    }
+
+    .sms-details-area {
+        width: 100%;
+        margin-top: 1.5rem;
+        padding: 0 1rem;
+    }
+
+    .sms-message-box {
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 0.75rem;
+        font-size: 0.85rem;
+        background-color: #f8f9fa;
+        min-height: 100px;
+    }
+
+    .sms-sending-info {
+        font-size: 0.9rem;
+    }
+
+    .sms-sending-info .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.35rem 0;
+    }
+
+    .info-item .info-label {
+        font-weight: 500;
+        color: #555;
+    }
+
+    .info-item .info-value {
+        background-color: #e9e9eb;
+        border-radius: 10px;
+        padding: 0.4rem 0.8rem;
+        font-weight: 500;
+        min-width: 120px;
+        text-align: center;
+    }
+
+    .additional-message-area {
+        margin-bottom: 1rem;
+    }
+
+    .additional-message-area label {
+        font-weight: 500;
+        color: #555;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    #adminMessageInput.form-control {
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+        padding: 0.75rem;
+        font-size: 0.85rem;
+        resize: none;
+    }
+
+    #adminMessageInput.form-control:focus {
+        background-color: #fff;
+        border-color: #64d4b9;
+        box-shadow: 0 0 0 0.2rem rgba(100, 212, 185, 0.25);
+    }
+
+    .recipient-table-wrapper .table {
+        border: 1px solid #e0e0e0;
+    }
+
+    .recipient-table-wrapper .table thead th {
+        background-color: #e9e9eb;
+        font-weight: 500;
+        font-size: 0.8rem;
+        padding: 0.5rem;
+        text-align: center;
+        border: 1px solid #e0e0e0;
+    }
+
+    .recipient-table-wrapper .table tbody td {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e0e0e0;
+    }
+
+    .recipient-table-wrapper .table tbody tr.selected {
+        background-color: #ffebee;
+    }
+
+    /* Hidden input */
+    #fileInput {
+        display: none;
     }
   </style>
 @endsection
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid py-4">
     <!-- Page Header -->
     <div class="page-header">
         <div>
-            <h1 class="header-main-title">{{ __('employee.management.page_title') }}</h1>
-            <p class="header-sub-title mb-0">{{ __('employee.management.excel_upload_prompt') }}</p>
+            <h1 class="header-main-title">Employee Summaries</h1>
         </div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-primary btn-sm" id="downloadTemplateBtn">
-                <i class="bx bx-download me-1"></i>{{ __('employee.management.download_template_button') }}
-            </button>
-            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                <i class="bx bx-plus me-1"></i>{{ __('employee.management.add_employee') }}
-            </button>
-        </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="stats-cards" id="statsCards" style="display: none;">
-        <!-- Statistics will be populated by JavaScript -->
-    </div>
-
-    <!-- Import Area -->
-    <div class="import-area" id="importArea">
-        <div class="upload-icon">
-            <i class="bx bx-cloud-upload"></i>
-        </div>
-        <p class="mb-1"><strong>{{ __('employee.management.import_employees_title') }}</strong></p>
-        <p class="drag-hint mb-0">
-            <i class="bx bx-info-circle me-1"></i>{{ __('employee.management.drag_drop_hint') }}
-        </p>
-        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="action-buttons-top mb-3" id="actionButtons" style="display: none;">
-        <div class="left-actions">
-            <span id="recordCount" class="text-muted">{{ __('employee.management.total_employees_display', ['count' => 0]) }}</span>
-        </div>
-        <div class="right-actions">
-            <button type="button" class="btn btn-danger btn-sm" id="deleteAllBtn">
-                <i class="bx bx-trash me-1"></i>{{ __('Delete All') }}
-            </button>
-        </div>
-    </div>
-
-    <!-- Filters Row -->
-    <div class="row mb-3" id="filtersRow" style="display: none;">
-        <div class="col-md-3">
-            <label for="companyFilter" class="form-label small">Department</label>
-            <select id="companyFilter" class="form-select form-select-sm">
-                <option value="">All Departments</option>
-                @foreach($companyNames as $company)
-                    <option value="{{ $company }}">{{ $company }}</option>
-                @endforeach
+        <div>
+            <select class="form-select form-select-sm d-inline-block w-auto">
+                <option>2025</option>
+            </select>
+            <select class="form-select form-select-sm d-inline-block w-auto">
+                <option>March</option>
             </select>
         </div>
-        <div class="col-md-3">
-            <label for="positionFilter" class="form-label small">Position</label>
-            <select id="positionFilter" class="form-select form-select-sm">
-                <option value="">All Positions</option>
-                @foreach($positions as $position)
-                    <option value="{{ $position }}">{{ $position }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="statusFilter" class="form-label small">Status</label>
-            <select id="statusFilter" class="form-select form-select-sm">
-                <option value="">All Status</option>
-                @foreach($statuses as $status)
-                    <option value="{{ $status }}">{{ ucfirst($status) }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-2">
-            <label for="durationFilter" class="form-label small">Employment Duration</label>
-            <select id="durationFilter" class="form-select form-select-sm">
-                <option value="">All Durations</option>
-                <option value="less_than_1">Less than 1 year</option>
-                <option value="1_to_3">1-3 years</option>
-                <option value="3_to_5">3-5 years</option>
-                <option value="more_than_5">More than 5 years</option>
-            </select>
-        </div>
-        <div class="col-md-1 d-flex align-items-end">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="clearFiltersBtn" title="Clear All Filters">
-                <i class="bx bx-refresh"></i>
-            </button>
-        </div>
     </div>
 
-    <!-- Grid Container -->
-    <div class="grid-container" id="gridContainer" style="display: none;">
+    <!-- Grid Wrapper -->
+    <div class="grid-wrapper">
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="left-actions">
+                <span id="totalCount" class="total-count">Total: 0</span>
+                <span id="selectedCount" class="text-muted ms-3"></span>
+                <input type="text" id="nameSearch" class="form-control form-control-sm search-bar" placeholder="Search (name)">
+            </div>
+            <div class="right-actions">
+                <button class="btn btn-secondary btn-sm" id="importExcelBtn"><i class="bx bx-upload me-1"></i> Import excel</button>
+                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+                <button class="btn btn-outline-danger btn-sm" id="deleteSelectedBtn"><br><i class="bx bx-trash me-1"></i> Delete selected user</button>
+                <button class="btn btn-sm" id="sendSmsBtn"><i class="bx bx-send me-1"></i> Send a sms</button>
+            </div>
+        </div>
+
+        <!-- Grid Container -->
         <div id="employeeGrid"></div>
     </div>
+</div>
 
-    <!-- Empty State -->
-    <div class="empty-state" id="emptyState">
-        <div class="empty-icon">
-            <i class="bx bx-user-plus"></i>
-        </div>
-        <h4>{{ __('No Employee Records') }}</h4>
-        <p>{{ __('Start by importing your first employee file.') }}</p>
-        <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-            <i class="bx bx-upload me-1"></i>{{ __('Import Your First File') }}
-        </button>
+<!-- Side Panel for Allowance & Deduction -->
+<div class="side-panel" id="allowanceDeductionPanel">
+    <div class="panel-header">
+        <h5 class="mb-0">
+            <span id="panelEmployeeId"></span> <span id="panelEmployeeName"></span> - Allowance & Deduction Details
+        </h5>
+        <button type="button" class="btn-close" id="closePanelBtn" aria-label="Close"></button>
+    </div>
+    <div class="panel-body">
+        <form id="detailsForm">
+            <input type="hidden" id="panelEditEmployeeId" name="id">
+            <div class="details-section">
+                <div class="detail-item">
+                    <label for="base_salary" class="fw-bold">Base Salary</label>
+                    <input type="text" id="base_salary" name="base_salary" class="form-control form-control-sm w-50 text-end">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="details-section">
+                        <h6>Allowance Breakdown (<span id="totalAllowance">0</span>)</h6>
+                        <div class="detail-item"><label>Early Duty Allowance</label><input type="text" name="early_duty_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Position Allowance</label><input type="text" name="position_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Duty Allowance</label><input type="text" name="duty_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Overtime Allowance</label><input type="text" name="overtime_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Holiday Work Allowance</label><input type="text" name="holiday_work_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Night Shift Allowance</label><input type="text" name="night_shift_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Bonus</label><input type="text" name="bonus" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Adjustment Allowance</label><input type="text" name="adjustment_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Transportation Allowance</label><input type="text" name="transportation_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Meal Allowance</label><input type="text" name="meal_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Labor Day Allowance</label><input type="text" name="labor_day_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Annual Leave Allowance</label><input type="text" name="annual_leave_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Welfare Allowance</label><input type="text" name="welfare_allowance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Other Allowances</label><input type="text" name="other_allowances" class="form-control form-control-sm w-50 text-end"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="details-section">
+                        <h6>Deduction Breakdown (<span id="totalDeduction">0</span>)</h6>
+                        <div class="detail-item"><label>Health Insurance</label><input type="text" name="health_insurance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Long-Term Care Insurance</label><input type="text" name="long_term_care_insurance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Employment Insurance</label><input type="text" name="employment_insurance" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>National Pension</label><input type="text" name="national_pension" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Income Tax</label><input type="text" name="income_tax" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Local Income Tax</label><input type="text" name="local_income_tax" class="form-control form-control-sm w-50 text-end"></div>
+                        <div class="detail-item"><label>Other Deductions</label><input type="text" name="other_deductions" class="form-control form-control-sm w-50 text-end"></div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="panel-footer">
+        <button class="btn btn-primary w-100" id="saveDetailsBtn">Edit</button>
     </div>
 </div>
 
-<!-- Preview Modal -->
-<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+<!-- Send SMS Modal -->
+<div class="modal fade" id="smsPreviewModal" tabindex="-1" aria-labelledby="smsPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="max-width: 700px; max-height: 500px;">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="previewModalLabel">{{ __('Preview Import Data') }}</h5>
+                <h5 class="modal-title" id="smsPreviewModalLabel">Send SMS</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3 d-flex justify-content-between align-items-center">
-                    <p class="text-muted mb-0">{{ __('Review the data below before importing. You can select which records to import.') }}</p>
-                    <div>
-                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="selectAllPreview">{{ __('Select All') }}</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllPreview">{{ __('Deselect All') }}</button>
+            <div class="modal-body sms-modal-body">
+                <!-- Left side: Employee List -->
+                <div class="sms-recipients-section">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6>Selected: <span id="smsSelectedCount">0</span>명</h6>
+                        <input type="text" class="form-control form-control-sm w-50" id="smsRecipientSearch" placeholder="search (name, number, ID)">
+                    </div>
+                    <div class="recipient-table-wrapper">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Department</th>
+                                    <th>Name</th>
+                                    <th>Mobile</th>
+                                </tr>
+                            </thead>
+                            <tbody id="smsRecipientList">
+                                <!-- Recipient rows will be populated by JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div id="previewGrid"></div>
-                <div class="mt-3">
-                    <span id="selectedCount" class="text-muted">{{ __('0 of 0 selected') }}</span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                <button type="button" class="btn btn-primary" id="saveSelectedBtn" disabled>{{ __('Save Selected') }}</button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Add Employee Modal -->
-<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addEmployeeModalLabel">{{ __('employee.management.add_employee_title') }}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addEmployeeForm">
-                    @csrf
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="employee_id" class="form-label">Employee ID *</label>
-                            <input type="text" class="form-control" id="employee_id" name="employee_id" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">Name *</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="company_name" class="form-label">Company Name</label>
-                            <input type="text" class="form-control" id="company_name" name="company_name">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="position" class="form-label">Position *</label>
-                            <input type="text" class="form-control" id="position" name="position" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="age" class="form-label">Age</label>
-                            <input type="number" class="form-control" id="age" name="age">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="resident_registration_number" class="form-label">Resident Registration Number</label>
-                            <input type="text" class="form-control" id="resident_registration_number" name="resident_registration_number">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="contact_number" class="form-label">Contact Number</label>
-                            <input type="text" class="form-control" id="contact_number" name="contact_number">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="date_of_joining" class="form-label">Date of Joining</label>
-                            <input type="date" class="form-control" id="date_of_joining" name="date_of_joining">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="work_days" class="form-label">Work Days</label>
-                            <input type="number" class="form-control" id="work_days" name="work_days">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="base_salary" class="form-label">Base Salary</label>
-                            <input type="number" class="form-control" id="base_salary" name="base_salary" step="0.01">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="employment_status_key" class="form-label">Status *</label>
-                            <select class="form-select" id="employment_status_key" name="employment_status_key" required>
-                                <option value="active">Active</option>
-                                <option value="resigning">Resigning</option>
-                                <option value="resigned">Resigned</option>
-                                <option value="on_leave">On Leave</option>
-                            </select>
+                <!-- Right side: SMS Preview -->
+                <div class="sms-preview-section">
+                    <div class="iphone-mockup">
+                        <div class="iphone-notch"></div>
+                        <div class="iphone-screen">
+                            <div class="iphone-status-bar">
+                                <span class="time">9:41</span>
+                                <div class="status-icons">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 16.55C2 16.8 2.2 17 2.45 17h.1c.25 0 .45-.2.45-.45V14.4c0-.25-.2-.45-.45-.45h-.1c-.25 0-.45.2-.45.45v2.15zm4.45-3.85C6.45 12.9 6.65 13.1 6.9 13.1h.1c.25 0 .45-.2.45-.45V11.2c0-.25-.2-.45-.45-.45h-.1c-.25 0-.45.2-.45.45v1.45zm4.45-3.85c0 .25.2.45.45.45h.1c.25 0 .45-.2.45-.45V7.35c0-.25-.2-.45-.45-.45h-.1c-.25 0-.45.2-.45.45v1.45zm4.45-3.85c0 .25.2.45.45.45h.1c.25 0 .45-.2.45-.45V3.5c0-.25-.2-.45-.45-.45h-.1c-.25 0-.45.2-.45.45v1.45z"></path></svg>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21,7H3C1.9,7,1,7.9,1,9v6c0,1.1,0.9,2,2,2h18c1.1,0,2-0.9,2-2V9C23,7.9,22.1,7,21,7z M21,15H3V9h18V15z"/><path d="M24,11h-1v2h1c0.6,0,1-0.4,1-1S24.6,11,24,11z"/></svg>
+                                </div>
+                            </div>
+                            <div class="sms-message-header">
+                                <a href="#" class="back-link">&lt;</a>
+                                <div class="recipient-info">
+                                    <div class="recipient-avatar"></div>
+                                    <span class="recipient-name" id="smsRecipientName">받는 사람 &gt;</span>
+                                </div>
+                            </div>
+                            <div class="sms-content" id="smsPreviewContent">
+                                <!-- SMS preview will be populated by JS -->
+                            </div>
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                <button type="button" class="btn btn-primary" id="saveEmployeeBtn">{{ __('Save Employee') }}</button>
+
+                    <div class="sms-details-area">
+                        <div class="additional-message-area">
+                            <label for="adminMessageInput">Additional Message</label>
+                            <textarea class="form-control" id="adminMessageInput" rows="3" placeholder="Enter an optional message..."></textarea>
+                        </div>
+                        <div class="sms-sending-info">
+                            <div class="info-item">
+                                <span class="info-label">Send number</span>
+                                <strong class="info-value">070-5555-3333</strong>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Remaining point</span>
+                                <strong class="info-value" id="remainingPoints">40,080</strong>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-3">
+                             <button type="button" class="btn btn-lg" id="confirmSendSmsBtn" style="background-color: #64d4b9; color: white; border-radius: 25px; border: none; font-weight: bold;">Send a sms</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -447,640 +665,315 @@
 
 <script>
 $(document).ready(function() {
-    let employeeData = [];
-    let previewData = [];
-    let selectedFile = null;
-
-    // Initialize page
+    let allEmployeeData = [];
+    
+    // Initial load
     loadEmployees();
 
-    // Drag and drop functionality
-    const importArea = document.getElementById('importArea');
-    const fileInput = document.getElementById('fileInput');
-
-    // Drag and drop events
-    importArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        importArea.classList.add('dragover');
-    });
-
-    importArea.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        importArea.classList.remove('dragover');
-    });
-
-    importArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        importArea.classList.remove('dragover');
-        
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            const file = files[0];
-            if (isValidFileType(file)) {
-                selectedFile = file;
-                processFileUpload(file);
-            } else {
-                showAlert('danger', 'Please select a valid Excel or CSV file.');
-            }
-        }
-    });
-
-    // Click to select file
-    importArea.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            const file = e.target.files[0];
-            if (isValidFileType(file)) {
-                selectedFile = file;
-                processFileUpload(file);
-            } else {
-                showAlert('danger', 'Please select a valid Excel or CSV file.');
-            }
-        }
-    });
-
-    function isValidFileType(file) {
-        const validTypes = [
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-excel',
-            'text/csv'
-        ];
-        return validTypes.includes(file.type) || file.name.match(/\.(xlsx|xls|csv)$/i);
-    }
-
-    function processFileUpload(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('_token', $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}');
-
-        $.ajax({
-            url: '{{ route("employees.preview") }}',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: function() {
-                importArea.classList.add('loading');
-            },
-            success: function(response) {
-                console.log('Preview response:', response);
-                if (response.success && response.data) {
-                    previewData = response.data;
-                    console.log('Preview data received:', previewData);
-                    
-                    if (previewData.rows && previewData.rows.length > 0) {
-                        showPreviewModal();
-                    } else {
-                        showAlert('warning', 'No valid data rows found in the file. Please check your file format.');
-                        resetFileInput();
-                    }
-                } else {
-                    showAlert('danger', response.message || 'Failed to process file.');
-                    resetFileInput();
-                }
-            },
-            error: function(xhr) {
-                console.log('Upload error:', xhr);
-                let errorMessage = 'Failed to upload file. Please try again.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    const errors = Object.values(xhr.responseJSON.errors).flat();
-                    errorMessage = errors.join(', ');
-                }
-                showAlert('danger', errorMessage);
-                resetFileInput();
-            },
-            complete: function() {
-                importArea.classList.remove('loading');
-            }
-        });
-    }
-
-    function resetFileInput() {
-        fileInput.value = '';
-        selectedFile = null;
-        importArea.classList.remove('dragover', 'loading');
-    }
-
-    function showPreviewModal() {
-        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
-        setupPreviewGrid();
-        modal.show();
-    }
-
-    function setupPreviewGrid() {
-        if (!previewData || !previewData.rows || previewData.rows.length === 0) {
-            console.log('No preview data available:', previewData);
-            $('#previewGrid').html('<div class="alert alert-warning">No data to preview</div>');
-            return;
-        }
-
-        console.log('Setting up preview grid with data:', previewData);
-        console.log('Preview rows:', previewData.rows);
-
-        const columns = [
-            { text: '', datafield: 'selected', columntype: 'checkbox', },
-            { text: 'Employee ID', datafield: 'employee_id', },
-            { text: 'Name', datafield: 'name', },
-            { text: 'Company Name', datafield: 'company_name', },
-            { text: 'Position', datafield: 'position', },
-            { text: 'Age', datafield: 'age', },
-            { text: 'Date of Birth', datafield: 'date_of_birth', },
-            { text: 'Resident Registration Number', datafield: 'resident_registration_number', },
-            { text: 'Contact Number', datafield: 'contact_number', },
-            { text: 'Date of Joining', datafield: 'date_of_joining', },
-            { text: 'Employment Duration', datafield: 'employment_duration', },
-            { text: 'Work Days', datafield: 'work_days', },
-            { text: 'Base Salary', datafield: 'base_salary',  }
-        ];
-
-        // Prepare data with all required fields
-        const gridData = previewData.rows.map((row, index) => {
-            return {
-                selected: row.selected !== false, // Default to true unless explicitly false
-                employee_id: row.employee_id || '',
-                name: row.name || '',
-                company_name: row.company_name || '',
-                position: row.position || '',
-                age: row.age || '',
-                date_of_birth: row.date_of_birth || '',
-                resident_registration_number: row.resident_registration_number || '',
-                contact_number: row.contact_number || '',
-                date_of_joining: row.date_of_joining || '',
-                employment_duration: row.employment_duration || '',
-                work_days: row.work_days || '',
-                base_salary: row.base_salary || '',
-                originalIndex: row.row_index !== undefined ? row.row_index : index
-            };
-        });
-
-        console.log('Grid data prepared:', gridData);
-
-        const dataAdapter = new $.jqx.dataAdapter({
-            localdata: gridData,
-            datatype: 'array'
-        });
-
-        // Clear existing grid
-        // try {
-        //     $('#previewGrid').jqxGrid('clear');
-        //     $('#previewGrid').jqxGrid('destroy');
-        // } catch (e) {
-        //     // Grid may not exist yet
-        //     console.log('Grid destroy error (expected on first run):', e);
-        // }
-
-        // Create the grid
-        $('#previewGrid').jqxGrid({
-            width: '100%',
-            height: 400,
-            source: dataAdapter,
-            columns: columns,
-            columnsresize: true,
-            sortable: true,
-            filterable: true,
-            selectionmode: 'checkbox',
-            enabletooltips: true,
-            ready: function() {
-                console.log('Preview grid ready');
-                // Select all rows by default
-                $('#previewGrid').jqxGrid('selectallrows');
-                updateSelectedCount();
-            }
-        });
-
-        // Bind selection events
-        $('#previewGrid').off('rowselect rowunselect').on('rowselect rowunselect', function() {
-            updateSelectedCount();
-        });
-    }
-
-    function updateSelectedCount() {
-        try {
-            const grid = $('#previewGrid');
-            if (grid.length > 0 && typeof grid.jqxGrid === 'function') {
-                const selectedRows = grid.jqxGrid('getselectedrowindexes');
-                const total = previewData.rows ? previewData.rows.length : 0;
-                $('#selectedCount').text(`${selectedRows.length} of ${total} selected`);
-                $('#saveSelectedBtn').prop('disabled', selectedRows.length === 0);
-            }
-        } catch (e) {
-            console.log('Error updating selected count:', e);
-        }
-    }
-
-    // Preview modal actions
-    $('#selectAllPreview').click(function() {
-        $('#previewGrid').jqxGrid('selectallrows');
-        updateSelectedCount();
-    });
-
-    $('#deselectAllPreview').click(function() {
-        $('#previewGrid').jqxGrid('clearselection');
-        updateSelectedCount();
-    });
-
-    $('#saveSelectedBtn').click(function() {
-        const selectedIndexes = $('#previewGrid').jqxGrid('getselectedrowindexes');
-        
-        if (selectedIndexes.length === 0) {
-            showAlert('warning', 'Please select at least one record to import.');
-            return;
-        }
-
-        // Get the original row indexes for the selected rows
-        const selectedOriginalIndexes = [];
-        selectedIndexes.forEach(function(gridIndex) {
-            const rowData = $('#previewGrid').jqxGrid('getrowdata', gridIndex);
-            if (rowData && rowData.originalIndex !== undefined) {
-                selectedOriginalIndexes.push(rowData.originalIndex);
-            } else {
-                selectedOriginalIndexes.push(gridIndex); // Fallback to grid index
-            }
-        });
-
-        console.log('Selected grid indexes:', selectedIndexes);
-        console.log('Selected original indexes:', selectedOriginalIndexes);
-
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        
-        // Append each selected row index
-        selectedOriginalIndexes.forEach(function(index) {
-            formData.append('selected_rows[]', index);
-        });
-        
-        formData.append('_token', $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}');
-
-        $.ajax({
-            url: '{{ route("employees.save-preview") }}',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: function() {
-                $('#saveSelectedBtn').prop('disabled', true).text('Importing...');
-            },
-            success: function(response) {
-                console.log('Save response:', response);
-                if (response.success) {
-                    showAlert('success', `${response.imported_count} employees imported successfully!`);
-                    bootstrap.Modal.getInstance(document.getElementById('previewModal')).hide();
-                    resetFileInput();
-                    loadEmployees(); // Refresh the grid
-                } else {
-                    showAlert('danger', response.message || 'Failed to import employees.');
-                }
-            },
-            error: function(xhr) {
-                console.log('Save error:', xhr);
-                let errorMessage = 'Failed to import employees. Please try again.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-                showAlert('danger', errorMessage);
-            },
-            complete: function() {
-                $('#saveSelectedBtn').prop('disabled', false).text('{{ __("Save Selected") }}');
-            }
-        });
-    });
-
-    // Load employees data
-    function loadEmployees() {
-        const filters = {
-            company: $('#companyFilter').val(),
-            position: $('#positionFilter').val(),
-            status: $('#statusFilter').val(),
-            duration: $('#durationFilter').val()
-        };
-        
-        // Remove empty filters
-        const data = {};
-        Object.keys(filters).forEach(key => {
-            if (filters[key]) {
-                data[key] = filters[key];
-            }
-        });
-        
+    function loadEmployees(searchTerm = '') {
         $.ajax({
             url: '{{ route('employees.index') }}',
             method: 'GET',
             dataType: 'json',
-            data: data,
             success: function(data) {
-                employeeData = data || [];
-                try {
-                    $('#employeeGrid').jqxGrid('clear');
-                } catch (e) {
-                    // Grid may not exist yet
+                allEmployeeData = data.map(emp => ({
+                    ...emp,
+                    total_allowance: emp.total_allowance || 358190,
+                    total_deduction: emp.total_deduction || 290950,
+                    total_pay: (emp.base_salary || 0) + (emp.total_allowance || 358190),
+                    net_pay: ((emp.base_salary || 0) + (emp.total_allowance || 358190)) - (emp.total_deduction || 290950),
+                    remarks: emp.remarks || 'Early pension withdrawal, pension deduction excluded',
+                    sms_sent: emp.sms_sent !== undefined ? emp.sms_sent : Math.random() > 0.3,
+                    employment_status: emp.employment_status || 'Working'
+                }));
+
+                let filteredData = allEmployeeData;
+                if (searchTerm) {
+                    filteredData = allEmployeeData.filter(emp => 
+                        emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
                 }
-                setupGrid();
-                updateStats && updateStats();
-                toggleEmptyState && toggleEmptyState();
+
+                setupGrid(filteredData);
+                $('#totalCount').text(`Total: ${filteredData.length} Working: ${filteredData.filter(e => e.employment_status === 'Working').length}`);
             },
             error: function() {
-                employeeData = [];
-                try {
-                    $('#employeeGrid').jqxGrid('clear');
-                } catch (e) {
-                    // Grid may not exist yet
-                }
-                setupGrid();
-                updateStats && updateStats();
-                toggleEmptyState && toggleEmptyState();
+                showAlert('danger', 'Failed to load employee data.');
             }
         });
     }
 
-    function setupGrid() {
-        if (employeeData.length === 0) {
-            $('#employeeGrid').hide();
-            $('#emptyState').show();
+    function setupGrid(data) {
+        const source = { localdata: data, datatype: "array" };
+        const dataAdapter = new $.jqx.dataAdapter(source);
+
+        const statusRenderer = (row, column, value) => {
+            const statusClass = {
+                'working': 'status-working',
+                'resigning soon': 'status-resigning',
+                'on leave': 'status-on-leave'
+            }[value.toLowerCase()] || '';
+            return `<div style="margin-top: 5px;"><span class="status-badge ${statusClass}">${value}</span></div>`;
+        };
+
+        const smsRenderer = (row, column, value) => {
+            const icon = value ? 'bx bx-check-circle sms-status-sent' : 'bx bx-x-circle sms-status-pending';
+            return `<div style="text-align: center; margin-top: 5px;"><i class="${icon}"></i></div>`;
+        };
+
+        $("#employeeGrid").jqxGrid({
+            width: '100%',
+            source: dataAdapter,
+            columnsresize: true,
+            sortable: true,
+            selectionmode: 'checkbox',
+            columns: [
+                { text: 'Employee ID', datafield: 'employee_id', width: 100 },
+                { text: 'Company', datafield: 'company', width: 120 },
+                { text: 'Position', datafield: 'position', width: 120 },
+                { text: 'Name', datafield: 'name', width: 120 },
+                { text: 'Work Days', datafield: 'work_days', width: 100, cellsalign: 'right' },
+                { text: 'Base Salary', datafield: 'base_salary', width: 120, cellsformat: 'n', cellsalign: 'right' },
+                { text: 'Total Allowance', datafield: 'total_allowance', width: 130, cellsformat: 'n', cellsalign: 'right' },
+                { text: 'Total Pay', datafield: 'total_pay', width: 120, cellsformat: 'n', cellsalign: 'right' },
+                { text: 'Total Deduction', datafield: 'total_deduction', width: 130, cellsformat: 'n', cellsalign: 'right' },
+                { text: 'Net Pay', datafield: 'net_pay', width: 120, cellsformat: 'n', cellsalign: 'right' },
+                { text: 'Employment Status', datafield: 'employment_status', width: 150, cellsrenderer: statusRenderer },
+                { text: 'Remarks', datafield: 'remarks', minwidth: 150 },
+                { text: 'SMS Sent', datafield: 'sms_sent', width: 80, cellsrenderer: smsRenderer, align: 'center' }
+            ]
+        });
+    }
+
+    // Search functionality
+    $('#nameSearch').on('keyup', function() {
+        loadEmployees($(this).val());
+    });
+
+    // --- Grid Selection Counter ---
+    $("#employeeGrid").on('rowselect rowunselect', function (event) {
+        const selectedCount = $("#employeeGrid").jqxGrid('getselectedrowindexes').length;
+        $('#selectedCount').text(selectedCount > 0 ? `${selectedCount} selected` : '');
+    });
+
+    // --- Allowance/Deduction Side Panel Logic ---
+    function formatNumber(num) {
+        if (num === null || num === undefined) return '-';
+        return new Intl.NumberFormat('en-US').format(num);
+    }
+
+    function parseNumber(str) {
+        if (typeof str === 'number') return str;
+        if (typeof str === 'string') {
+            const num = parseFloat(str.replace(/,/g, ''));
+            return isNaN(num) ? 0 : num;
+        }
+        return 0;
+    }
+
+    function populateSidePanel(rowData) {
+        $('#panelEmployeeId').text(rowData.employee_id);
+        $('#panelEmployeeName').text(rowData.name);
+        $('#panelEditEmployeeId').val(rowData.id);
+
+        const form = $('#detailsForm');
+        form.find('input[type="text"]').val('-'); // Reset all to '-'
+
+        form.find('input[name="base_salary"]').val(formatNumber(rowData.base_salary));
+        
+        const fields = {
+            allowances: ['early_duty_allowance', 'position_allowance', 'duty_allowance', 'overtime_allowance', 'holiday_work_allowance', 'night_shift_allowance', 'bonus', 'adjustment_allowance', 'transportation_allowance', 'meal_allowance', 'labor_day_allowance', 'annual_leave_allowance', 'welfare_allowance', 'other_allowances'],
+            deductions: ['health_insurance', 'long_term_care_insurance', 'employment_insurance', 'national_pension', 'income_tax', 'local_income_tax', 'other_deductions']
+        };
+
+        let totalAllowance = 0;
+        fields.allowances.forEach(field => {
+            const value = rowData[field] ? parseNumber(rowData[field]) : 0;
+            form.find(`input[name="${field}"]`).val(formatNumber(value));
+            totalAllowance += value;
+        });
+
+        let totalDeduction = 0;
+        fields.deductions.forEach(field => {
+            const value = rowData[field] ? parseNumber(rowData[field]) : 0;
+            form.find(`input[name="${field}"]`).val(formatNumber(value));
+            totalDeduction += value;
+        });
+
+        $('#totalAllowance').text(formatNumber(totalAllowance));
+        $('#totalDeduction').text(formatNumber(totalDeduction));
+    }
+
+    $('#employeeGrid').on('cellclick', function (event) {
+        const args = event.args;
+        // Prevent opening panel on checkbox click
+        if (args.columnindex === 0 || args.rowindex < 0) {
             return;
         }
-        $('#emptyState').hide();
-        $('#employeeGrid').show();
-
-        const columns = [
-            { text: '', datafield: 'selected', columntype: 'checkbox' },
-            { text: 'Employee ID', datafield: 'employee_id' },
-            { text: 'Name', datafield: 'name' },
-            { text: 'Department', datafield: 'work_location' },
-            { text: 'Position', datafield: 'position' },
-            { text: 'Age', datafield: 'age' },
-            { text: 'Resident ID Number', datafield: 'resident_registration_number' },
-            { text: 'Contact Number', datafield: 'contact_number' },
-            { text: 'Date of Joining', datafield: 'date_of_joining' },
-            { text: 'Employment Duration', datafield: 'employment_duration' },
-            { text: 'Base Salary', datafield: 'base_salary' },
-            { 
-                text: 'Status', 
-                datafield: 'employment_status_key', 
-                cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata) {
-                    const status = rowdata.employment_status_key || 'active';
-                    const statusClass = {
-                        active: 'badge bg-success',
-                        resigning: 'badge bg-warning',
-                        resigned: 'badge bg-secondary',
-                        on_leave: 'badge bg-info'
-                    }[status] || 'badge bg-secondary';
-                    return `<span class="${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
-                }
-            },
-            { 
-                text: 'Actions', 
-                datafield: 'actions', 
-                cellsrenderer: function(row, columnfield, value, defaulthtml, columnproperties, rowdata) {
-                    return `
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-primary edit-btn" data-id="${rowdata.id}" title="Edit">
-                                <i class="bx bx-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${rowdata.id}" title="Delete">
-                                <i class="bx bx-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        ];
-
-        const dataAdapter = new $.jqx.dataAdapter({
-            localdata: employeeData
-        });
-
-        // Clear and reinitialize grid
-        // try {
-        //     $('#employeeGrid').jqxGrid('destroy');
-        // } catch (e) {
-        //     // Grid may not exist yet
-        // }
-        
-        $('#employeeGrid').jqxGrid({
-            width: '98%',
-            height: 400,
-            source: dataAdapter,
-            columns: columns,
-            sortable: true,
-            filterable: true,
-            selectionmode: 'none',
-            enabletooltips: true,
-            ready: function() {
-                // Bind action buttons after grid is ready
-                bindActionButtons && bindActionButtons();
-            }
-        });
-    }
-
-    function bindActionButtons() {
-        // Edit buttons
-        $(document).off('click', '.edit-btn').on('click', '.edit-btn', function() {
-            const id = $(this).data('id');
-            const employee = employeeData.find(emp => emp.id == id);
-            if (employee) {
-                populateEditForm(employee);
-                const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
-                $('#addEmployeeModalLabel').text('{{ __("employee.management.edit_employee_title") }}');
-                $('#addEmployeeForm').attr('data-id', id);
-                modal.show();
-            }
-        });
-
-        // Delete buttons
-        $(document).off('click', '.delete-btn').on('click', '.delete-btn', function() {
-            const id = $(this).data('id');
-            if (confirm('Are you sure you want to delete this employee?')) {
-                deleteEmployee(id);
-            }
-        });
-    }
-
-    function populateEditForm(employee) {
-        $('#employee_id').val(employee.employee_id);
-        $('#name').val(employee.name);
-        $('#company_name').val(employee.work_location);
-        $('#position').val(employee.position);
-        $('#age').val(employee.age);
-        $('#resident_registration_number').val(employee.resident_registration_number);
-        $('#contact_number').val(employee.contact_number);
-        $('#date_of_joining').val(employee.date_of_joining);
-        $('#work_days').val(employee.work_days);
-        $('#base_salary').val(employee.base_salary);
-        $('#employment_status_key').val(employee.employment_status_key || 'active');
-    }
-
-    function deleteEmployee(id) {
-        $.ajax({
-            url: `/employees/${id}`,
-            method: 'DELETE',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                showAlert('success', 'Employee deleted successfully!');
-                loadEmployees();
-            },
-            error: function() {
-                showAlert('danger', 'Failed to delete employee.');
-            }
-        });
-    }
-
-    function updateStats() {
-        const total = employeeData.length;
-        const totalSalary = employeeData.reduce((sum, emp) => sum + (parseFloat(emp.base_salary) || 0), 0);
-        const avgWorkDays = employeeData.length > 0 ? 
-            employeeData.reduce((sum, emp) => sum + (parseInt(emp.work_days) || 0), 0) / employeeData.length : 0;
-
-        $('#recordCount').text(`{{ __('employee.management.total_employees_display', ['count' => '']) }}${total}`);
-
-        if (total > 0) {
-            $('#statsCards').html(`
-                <div class="stats-card">
-                    <div class="stats-value">${total}</div>
-                    <div class="stats-label">{{ __('Total Employees') }}</div>
-                </div>
-                <div class="stats-card">
-                    <div class="stats-value">${totalSalary.toLocaleString()}</div>
-                    <div class="stats-label">{{ __('Total Base Salary') }}</div>
-                </div>
-                <div class="stats-card">
-                    <div class="stats-value">${avgWorkDays.toFixed(1)}</div>
-                    <div class="stats-label">{{ __('Avg Work Days') }}</div>
-                </div>
-            `).show();
-        } else {
-            $('#statsCards').hide();
+        const rowData = args.row.bounddata;
+        if (rowData) {
+            populateSidePanel(rowData);
+            $('#allowanceDeductionPanel').addClass('open');
         }
-    }
+    });
 
-    function toggleEmptyState() {
-        if (employeeData.length === 0) {
-            $('#emptyState').show();
-            // $('#actionButtons, #filtersRow, #gridContainer').hide();
-        } else {
-            $('#emptyState').hide();
-            // 
-        }
+    $('#closePanelBtn, #cancelDetailsBtn').on('click', () => $('#allowanceDeductionPanel').removeClass('open'));
 
-        $('#actionButtons, #filtersRow, #gridContainer').show();
-    }
-
-    // Add/Edit employee modal
-    $('#saveEmployeeBtn').click(function() {
-        const form = $('#addEmployeeForm');
+    $('#saveDetailsBtn').on('click', function() {
+        const form = $('#detailsForm');
         const formData = new FormData(form[0]);
-        const id = form.attr('data-id');
-        
-        const url = id ? `/employees/${id}` : '{{ route("employees.store") }}';
-        const method = id ? 'PUT' : 'POST';
-        
-        if (id) {
-            formData.append('_method', 'PUT');
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+            data[key] = (key === 'id') ? value : parseNumber(value);
         }
 
         $.ajax({
-            url: url,
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: function() {
-                $('#saveEmployeeBtn').prop('disabled', true);
+            url: `/employees/${data.id}/update-details`,
+            method: 'POST', // Using POST to avoid issues with PUT and FormData
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'X-HTTP-Method-Override': 'PUT'
             },
             success: function(response) {
-                showAlert('success', id ? 'Employee updated successfully!' : 'Employee created successfully!');
-                bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
-                form[0].reset();
-                form.removeAttr('data-id');
-                $('#addEmployeeModalLabel').text('{{ __("employee.management.add_employee_title") }}');
-                loadEmployees();
+                showAlert('success', 'Employee details updated successfully!');
+                $('#allowanceDeductionPanel').removeClass('open');
+                loadEmployees($('#nameSearch').val()); // Refresh grid
             },
             error: function(xhr) {
-                const errors = xhr.responseJSON?.errors;
+                const errors = xhr.responseJSON.errors;
+                let errorMsg = 'Failed to update details.';
                 if (errors) {
-                    let errorMessage = 'Please correct the following errors:\n';
-                    Object.values(errors).forEach(fieldErrors => {
-                        fieldErrors.forEach(error => {
-                            errorMessage += `• ${error}\n`;
-                        });
-                    });
-                    showAlert('danger', errorMessage);
-                } else {
-                    showAlert('danger', 'Failed to save employee.');
+                    errorMsg = Object.values(errors).flat().join('<br>');
                 }
-            },
-            complete: function() {
-                $('#saveEmployeeBtn').prop('disabled', false);
+                showAlert('danger', errorMsg);
             }
         });
     });
 
-    // Delete all employees
-    $('#deleteAllBtn').click(function() {
-        if (confirm('Are you sure you want to delete all employees? This action cannot be undone.')) {
-            $.ajax({
-                url: '{{ route("employees.delete-all") }}',
-                method: 'DELETE',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showAlert('success', `${response.deleted_count} employees deleted successfully!`);
-                        loadEmployees();
-                    } else {
-                        showAlert('danger', response.message || 'Failed to delete employees.');
-                    }
-                },
-                error: function() {
-                    showAlert('danger', 'Failed to delete employees.');
-                }
-            });
+    // --- Send SMS Modal Logic ---
+    let smsSelectedEmployees = [];
+
+    $('#sendSmsBtn').on('click', function() {
+        const selectedIndexes = $('#employeeGrid').jqxGrid('getselectedrowindexes');
+        if (selectedIndexes.length === 0) {
+            showAlert('warning', 'Please select at least one employee to send SMS.');
+            return;
+        }
+
+        smsSelectedEmployees = selectedIndexes.map(index => $('#employeeGrid').jqxGrid('getrowdata', index));
+        
+        populateRecipientTable(smsSelectedEmployees);
+        $('#smsSelectedCount').text(smsSelectedEmployees.length);
+
+        if (smsSelectedEmployees.length > 0) {
+            $('#smsRecipientList tr').first().addClass('selected');
+            updateSmsPreview(smsSelectedEmployees[0]);
+        }
+
+        new bootstrap.Modal(document.getElementById('smsPreviewModal')).show();
+    });
+
+    function populateRecipientTable(employees) {
+        const recipientList = $('#smsRecipientList');
+        recipientList.empty();
+        employees.forEach(emp => {
+            const row = $(`
+                <tr data-id="${emp.id}">
+                    <td>${emp.employee_id}</td>
+                    <td>${emp.department || 'Seoul, sec'}</td>
+                    <td>${emp.name}</td>
+                    <td>${emp.contact_number || '010-5555-2222'}</td>
+                </tr>
+            `);
+            recipientList.append(row);
+        });
+    }
+
+    $('#smsRecipientSearch').on('keyup', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        const filteredEmployees = smsSelectedEmployees.filter(emp => 
+            emp.name.toLowerCase().includes(searchTerm) ||
+            emp.employee_id.toString().includes(searchTerm) ||
+            (emp.contact_number || '').includes(searchTerm)
+        );
+        populateRecipientTable(filteredEmployees);
+        if (filteredEmployees.length > 0) {
+             $('#smsRecipientList tr').first().addClass('selected');
+            updateSmsPreview(filteredEmployees[0]);
         }
     });
 
-    // Download template
-    $('#downloadTemplateBtn').click(function() {
-        window.location.href = '{{ route("employees.template.download") }}';
+    $(document).on('click', '#smsRecipientList tr', function() {
+        $('#smsRecipientList tr').removeClass('selected');
+        $(this).addClass('selected');
+        const employeeId = $(this).data('id');
+        const employeeData = smsSelectedEmployees.find(emp => emp.id == employeeId);
+        updateSmsPreview(employeeData);
     });
 
-    // Reset modal when hidden
-    $('#addEmployeeModal').on('hidden.bs.modal', function() {
-        $('#addEmployeeForm')[0].reset();
-        $('#addEmployeeForm').removeAttr('data-id');
-        $('#addEmployeeModalLabel').text('{{ __("employee.management.add_employee_title") }}');
-    });
-
-    // Reset preview modal when hidden
-    $('#previewModal').on('hidden.bs.modal', function() {
-        resetFileInput();
-        try {
-            $('#previewGrid').jqxGrid('clear');
-        } catch (e) {
-            // Grid may not exist
+    function updateSmsPreview(employee) {
+        if (!employee) {
+            $('#smsRecipientName').text('받는 사람 >');
+            $('#smsPreviewContent').html(''); // Clear preview if no employee
+            return;
         }
-        previewData = [];
+
+        // Update recipient name in the header
+        $('#smsRecipientName').text(`${employee.name} >`);
+
+        const f = (n) => n ? n.toLocaleString() : '0';
+
+        // Get admin message from the new textarea
+        const adminMessage = $('#adminMessageInput').val();
+
+        const blackTextContent = 
+            `<strong>[주]피에스엠씨] 급여 명세서 발송 2025년의 3월 급여가 지급되었습니다.</strong><br>` +
+            `귀하의 노고에 감사드립니다.<br><br>` +
+            `급여명세서 링크 확인하기<br>` +
+            `www.google.com/jaden221`;
+
+        const blueTextContent = 
+            `[지급일] 2025년 04월 10일<br><br>` +
+            `[사원코드] ${employee.employee_id}<br>` +
+            `[사원명] ${employee.name} 님 귀하<br><br>` +
+            `<strong>[2025년 3월 급여 명세서]</strong><br>` +
+            `&nbsp;• 기본급 ${f(employee.base_salary)}<br>` +
+            `&nbsp;• 선임(자격수당) 400,000<br>` +
+            `&nbsp;• 연차수당 154,000<br>` +
+            `&nbsp;▶ 지급액계 ${f(employee.total_pay)}<br><br>` +
+            `&nbsp;• 건강보험 ${f(133500)}<br>` +
+            `&nbsp;• 장기요양보험료 ${f(17280)}<br>` +
+            `&nbsp;• 소득세 ${f(178920)}<br>` +
+            `&nbsp;• 지방소득세 ${f(17890)}<br>` +
+            `&nbsp;▶ 공제액계 ${f(employee.total_deduction)}`;
+
+        const previewHtml = `
+            <div class="sms-timestamp">오늘 오후</div>
+            <div class="sms-bubble">
+                <div>${blackTextContent}</div>
+                <div style="color: #007bff; margin-top: 1rem;">${blueTextContent}</div>
+                ${adminMessage ? `<br><div style="color: #000;">${adminMessage.replace(/\n/g, '<br>')}</div>` : ''}
+            </div>
+        `;
+        
+        $('#smsPreviewContent').html(previewHtml);
+    }
+
+    // Add event listener for the admin message input to update preview in real-time
+    $('#adminMessageInput').on('input', function() {
+        const selectedRow = $('#smsRecipientList tr.selected');
+        if (selectedRow.length) {
+            const employeeId = selectedRow.data('id');
+            const employeeData = smsSelectedEmployees.find(emp => emp.id == employeeId);
+            updateSmsPreview(employeeData);
+        }
     });
 
-    // Filter events
-    $('#companyFilter, #positionFilter, #statusFilter, #durationFilter').on('change', function() {
-        loadEmployees();
-    });
-
-    // Clear filters
-    $('#clearFiltersBtn').on('click', function() {
-        $('#companyFilter, #positionFilter, #statusFilter, #durationFilter').val('');
-        loadEmployees();
-    });
+    $('#importExcelBtn').on('click', () => $('#fileInput').click());
 
     function showAlert(type, message) {
-        // Create alert element
         const alertDiv = $(`
             <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
                  style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
@@ -1088,13 +981,8 @@ $(document).ready(function() {
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         `);
-        
         $('body').append(alertDiv);
-        
-        // Auto hide after 5 seconds
-        setTimeout(() => {
-            alertDiv.alert('close');
-        }, 5000);
+        setTimeout(() => { alertDiv.alert('close'); }, 5000);
     }
 });
 </script>
