@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\language\LanguageController;
 use App\Http\Controllers\EmployeeController;
 use Illuminate\Support\Facades\Route;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 Route::get('/', function () {
     return view('dashboard');
@@ -23,15 +24,27 @@ Route::middleware('auth')->group(function () {
     Route::get('/payrolls', [App\Http\Controllers\PayrollController::class, 'index'])->name('payrolls.index');
     Route::get('/payrolls/print', [App\Http\Controllers\PayrollController::class, 'print'])->name('payrolls.print');
     
-    // Employee routes
+    // Employee routes - define specific routes before resource to avoid conflicts
+    
+    // Bulk delete route (must be defined before resource)
+    Route::post('employees/bulk-delete', [EmployeeController::class, 'bulkDelete'])
+        ->name('employees.bulk-delete');
+        
+    // Truncate all employees route
+    Route::post('employees/truncate-all', [EmployeeController::class, 'truncateAll'])
+        ->name('employees.truncate-all');
+        
+    // Main resource route for employees (with show excluded)
     Route::resource('employees', EmployeeController::class)->except(['show']);
-    Route::get('employees-import', [EmployeeController::class, 'importForm'])->name('employees.import.form');
-    Route::post('employees-import', [EmployeeController::class, 'import'])->name('employees.import');
-    Route::post('employees/import', [\App\Http\Controllers\EmployeeController::class, 'import'])->name('employees.import');
-    Route::post('employees/preview', [\App\Http\Controllers\EmployeeController::class, 'preview'])->name('employees.preview');
-    Route::post('employees/save-preview', [\App\Http\Controllers\EmployeeController::class, 'savePreview'])->name('employees.save-preview');
-    Route::delete('employees/delete-all', [\App\Http\Controllers\EmployeeController::class, 'deleteAll'])->name('employees.delete-all');
-    Route::get('employees/template/download', [\App\Http\Controllers\EmployeeController::class, 'downloadTemplate'])->name('employees.template.download');
+    
+    // Additional employee routes under prefix
+    Route::prefix('employees')->name('employees.')->group(function () {
+        Route::get('import', [EmployeeController::class, 'importForm'])->name('import.form');
+        Route::post('import', [EmployeeController::class, 'import'])->name('import');
+        Route::post('preview', [EmployeeController::class, 'preview'])->name('preview');
+        Route::post('save-preview', [EmployeeController::class, 'savePreview'])->name('save-preview');
+        Route::get('template/download', [EmployeeController::class, 'downloadTemplate'])->name('template.download');
+    });
     
     // Payroll routes
     Route::get('/payrolls/employees', [App\Http\Controllers\PayrollController::class, 'getEmployees'])->name('payrolls.employees');
@@ -66,5 +79,63 @@ Route::get('/test-payroll', function() {
 Route::get('/test-modal', function() {
     return view('test-modal');
 })->name('test.modal');
+
+Route::get('/test-import', function () {
+    return view('employees.import');
+});
+
+// Test route to debug Excel import
+Route::post('/test-upload', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+    ]);
+
+    $file = $request->file('file');
+    
+    try {
+        // Log file info
+        \Log::info('Test upload received', [
+            'name' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+            'mime' => $file->getMimeType(),
+            'extension' => $file->getClientOriginalExtension()
+        ]);
+
+        // Read the Excel file
+        $spreadsheet = IOFactory::load($file->getPathname());
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
+        
+        // Log the first 5 rows for debugging
+        $sampleRows = array_slice($rows, 0, 5);
+        \Log::debug('First 5 rows of Excel file', ['rows' => $sampleRows]);
+        
+        // Return the first 5 rows as JSON
+        return response()->json([
+            'success' => true,
+            'headers' => !empty($rows[0]) ? $rows[0] : [],
+            'first_few_rows' => $sampleRows,
+            'total_rows' => count($rows),
+            'file_info' => [
+                'name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime' => $file->getMimeType(),
+                'extension' => $file->getClientOriginalExtension()
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Error reading Excel file', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+})->name('test.upload');
 
 require __DIR__.'/auth.php';

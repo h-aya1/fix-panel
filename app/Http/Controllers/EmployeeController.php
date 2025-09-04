@@ -156,8 +156,44 @@ class EmployeeController extends Controller
     public function destroy(Employee $employee)
     {
         $employee->delete();
+        // Return a JSON response for AJAX calls
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Employee deleted successfully.']);
+        }
         Session::flash('success', __('employee.deleted_successfully'));
         return redirect()->route('employees.index');
+    }
+    
+    /**
+     * Delete multiple employees in bulk based on IDs.
+     * RENAMED FROM deleteAll to bulkDelete to avoid conflict.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:employees,id',
+        ]);
+
+        try {
+            $count = Employee::whereIn('id', $request->ids)->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted $count employees.",
+                'count' => $count
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting employees: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete employees. Please try again.'
+            ], 500);
+        }
     }
 
     public function importForm()
@@ -167,14 +203,92 @@ class EmployeeController extends Controller
 
     public function import(Request $request)
     {
+        \Log::info('Starting import process', ['file' => $request->file('file') ? $request->file('file')->getClientOriginalName() : 'no file']);
+        
         $request->validate([
-            'file' => 'required|file',
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // 10MB max
         ]);
-        Excel::import(new \App\Imports\EmployeeImport, $request->file('file'));
-        Session::flash('success', __('employee.imported_successfully'));
-        return redirect()->route('employees.index');
-    }
 
+        try {
+            $import = new \App\Imports\EmployeeImport;
+            
+            // Use queue for large files, otherwise import directly
+            if ($request->file('file')->getSize() > 500000) { // 500KB
+                \Log::info('Queueing import for large file');
+                Excel::queueImport($import, $request->file('file'));
+                $message = 'Your file is being processed. You will be notified when the import is complete.';
+            } else {
+                \Log::info('Starting direct import');
+                $result = Excel::import($import, $request->file('file'));
+                $importedCount = $import->getImportedCount();
+                $updatedCount = $import->getUpdatedCount();
+                $skippedCount = $import->getSkippedCount();
+                $errors = $import->getErrors();
+                
+                \Log::info('Import completed', [
+                    'imported' => $importedCount,
+                    'updated' => $updatedCount,
+                    'skipped' => $skippedCount,
+                    'errors' => $errors
+                ]);
+                
+                $message = "Import completed. ";
+                $message .= $importedCount > 0 ? "Imported: {$importedCount} " : "";
+                $message .= $updatedCount > 0 ? "Updated: {$updatedCount} " : "";
+                $message .= $skippedCount > 0 ? "Skipped: {$skippedCount} " : "";
+                
+                if (!empty($errors)) {
+                    \Log::warning('Import completed with errors', ['errors' => $errors]);
+                    $message .= "Some rows had errors. Check the logs for details.";
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'imported' => $importedCount ?? 0,
+                'updated' => $updatedCount ?? 0,
+                'skipped' => $skippedCount ?? 0,
+                'errors' => $errors ?? []
+            ]);
+                
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            
+            foreach ($failures as $failure) {
+                $errorMessages[] = [
+                    'row' => $failure->row(),
+                    'attribute' => $failure->attribute(),
+                    'errors' => $failure->errors(),
+                    'values' => $failure->values()
+                ];
+            }
+            
+            \Log::error('Import Validation Error', ['errors' => $errorMessages]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation errors occurred during import.',
+                'errors' => $errorMessages
+            ], 422);
+                
+        } catch (\Exception $e) {
+            \Log::error('File Import Error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred during the import. Please check the file format and try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
     public function preview(Request $request)
     {
         $request->validate([
@@ -374,7 +488,6 @@ class EmployeeController extends Controller
             'staff_name' => 'name',
             'worker_name' => 'name',
             
-
             'company_name' => 'company_name',
             'company' => 'company_name',
             'organization' => 'company_name',
@@ -619,7 +732,14 @@ class EmployeeController extends Controller
         }
     }
 
-    public function deleteAll(Request $request)
+    /**
+     * Deletes all employee records from the database.
+     * RENAMED FROM deleteAll to truncateAll to avoid conflict.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function truncateAll(Request $request)
     {
         try {
             $count = Employee::count();
