@@ -871,7 +871,7 @@ $(document).ready(function() {
         }).then((result) => { 
             if (result.isConfirmed) { 
                 $.ajax({ 
-                    url: '/employees/delete-multiple', 
+                    url: '/employees/bulk-delete', 
                     type: 'POST', 
                     data: { 
                         ids: selectedIds, 
