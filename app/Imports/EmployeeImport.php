@@ -10,13 +10,14 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
+use Maatwebsite\Excel\Concerns\PrepareForValidation;
 use Maatwebsite\Excel\Validators\Failure;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithValidation, SkipsOnError
+class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithValidation, SkipsOnError, PrepareForValidation
 {
     use SkipsErrors;
 
@@ -81,33 +82,10 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
         \Log::debug('Processing row', ['row' => $this->rowCount, 'data' => $row]);
         
         try {
-            // Convert all row keys to lowercase for case-insensitive matching
-            $row = array_change_key_case($row, CASE_LOWER);
+            // Row data has already been validated and mapped in prepareForValidation
+            $mappedRow = $row;
             
-            // Map headers to standard field names
-            $mappedRow = [];
-            foreach ($this->headers as $standardField => $possibleHeaders) {
-                foreach ($possibleHeaders as $header) {
-                    $header = strtolower(trim($header));
-                    if (isset($row[$header]) && !empty($row[$header])) {
-                        $mappedRow[$standardField] = $row[$header];
-                        break;
-                    }
-                }
-            }
-            
-            // If no name is found, try to find it using common name fields
-            if (empty($mappedRow['name'])) {
-                $nameFields = ['employee name', 'name', 'full name', 'employee_name', 'full_name'];
-                foreach ($nameFields as $field) {
-                    if (!empty($row[$field])) {
-                        $mappedRow['name'] = $row[$field];
-                        break;
-                    }
-                }
-            }
-            
-            // Skip rows without a name
+            // Skip rows without a name (should not happen due to validation, but safety check)
             if (empty($mappedRow['name'])) {
                 $errorMsg = 'Employee name is required';
                 $this->importErrors[] = [
@@ -122,7 +100,7 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
             // Clean and format data
             $employeeData = [
                 'uid' => (string) Str::uuid(),
-                'employee_id' => $this->cleanValue($mappedRow['employee_id'] ?? null),
+                'employee_id' => $mappedRow['employee_id'] ?? null,
                 'work_location' => $this->cleanValue($mappedRow['work_location'] ?? null),
                 'position' => $this->cleanValue($mappedRow['position'] ?? 'Employee'),
                 'name' => $this->cleanValue($mappedRow['name'] ?? null),
@@ -270,18 +248,86 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
         }
     }
 
+    public function prepareForValidation($data, $index)
+    {
+        // Convert all row keys to lowercase for case-insensitive matching
+        $data = array_change_key_case($data, CASE_LOWER);
+        
+        // Map headers to standard field names and prepare data for validation
+        $mappedRow = [];
+        foreach ($this->headers as $standardField => $possibleHeaders) {
+            foreach ($possibleHeaders as $header) {
+                $header = strtolower(trim($header));
+                if (isset($data[$header]) && !empty($data[$header])) {
+                    $mappedRow[$standardField] = $data[$header];
+                    break;
+                }
+            }
+        }
+        
+        // If no name is found, try to find it using common name fields
+        if (empty($mappedRow['name'])) {
+            $nameFields = ['employee name', 'name', 'full name', 'employee_name', 'full_name'];
+            foreach ($nameFields as $field) {
+                if (!empty($data[$field])) {
+                    $mappedRow['name'] = $data[$field];
+                    break;
+                }
+            }
+        }
+        
+        // Convert employee_id to string if it exists
+        if (isset($mappedRow['employee_id'])) {
+            $mappedRow['employee_id'] = $this->cleanValue($mappedRow['employee_id'], true);
+        }
+        
+        // Handle date of joining
+        if (isset($mappedRow['join_date'])) {
+            $mappedRow['date_of_joining'] = $mappedRow['join_date'];
+        }
+        
+        // Also check for additional fields that might be in the raw data
+        $additionalFields = ['gender', 'sex', 'email', 'address', 'residence', 'city', 'state', 'province', 
+                            'postal_code', 'zip', 'country', 'emergency_contact', 'emergency_contact_name', 
+                            'emergency_contact_number', 'emergency_phone'];
+        
+        foreach ($additionalFields as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                $mappedRow[$field] = $data[$field];
+            }
+        }
+        
+        return $mappedRow;
+    }
+
     public function rules(): array
     {
         return [
-            // These rules are for the mapped fields, not the raw Excel columns
-            'name' => function($attribute, $value, $onFailure) {
-                if (empty($value)) {
-                    $onFailure('Employee name is required');
-                }
-            },
             'employee_id' => 'nullable|string|max:100',
+            'name' => 'required|string|max:255',
             'contact_number' => 'nullable|string|max:20',
-            'date_of_joining' => 'nullable|date',
+            'date_of_joining' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && $value !== '') {
+                        // Skip validation if it's already a valid date string
+                        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                            return;
+                        }
+                        
+                        // Skip validation for Excel serial dates (numeric values)
+                        if (is_numeric($value) && $value > 0) {
+                            return;
+                        }
+                        
+                        // Try to parse the date
+                        $parsedDate = $this->parseDate($value);
+                        if ($parsedDate === null) {
+                            $fail('Invalid date format for joining date. Use YYYY-MM-DD format');
+                        }
+                    }
+                }
+            ],
             'base_salary' => 'nullable|numeric|min:0',
             'work_days' => 'nullable|integer|min:0|max:31',
             'age' => 'nullable|integer|min:16|max:100',
@@ -291,7 +337,11 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
     public function customValidationMessages()
     {
         return [
+            'employee_id.string' => 'The employee_id field must be a string.',
+            'employee_id.max' => 'The employee_id field must not exceed 100 characters.',
             'name.required' => 'Employee name is required',
+            'name.string' => 'Employee name must be a string',
+            'name.max' => 'Employee name must not exceed 255 characters',
             'date_of_joining.date' => 'Invalid date format for joining date. Use YYYY-MM-DD format',
             'base_salary.numeric' => 'Base salary must be a number',
             'base_salary.min' => 'Base salary cannot be negative',
@@ -338,8 +388,34 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
         return $this->importErrors;
     }
 
-    private function cleanValue($value)
+    private function cleanValue($value, $isEmployeeId = false)
     {
+        if (is_null($value) || $value === '') {
+            return $isEmployeeId ? '' : null;
+        }
+        
+        // For employee_id, ensure it's treated as a string and preserve leading zeros
+        if ($isEmployeeId) {
+            // Convert to string first
+            $stringValue = (string)$value;
+            
+            // Handle scientific notation (e.g., 1.23E+5)
+            if (is_numeric($value) && (strpos($stringValue, 'E') !== false || strpos($stringValue, 'e') !== false)) {
+                $stringValue = number_format($value, 0, '', '');
+            }
+            
+            // Remove decimal part if it exists (for cases like 547.0)
+            if (strpos($stringValue, '.') !== false && is_numeric($stringValue)) {
+                $stringValue = substr($stringValue, 0, strpos($stringValue, '.'));
+            }
+            
+            // Trim whitespace
+            $stringValue = trim($stringValue);
+            
+            return $stringValue;
+        }
+        
+        // For other values
         if (is_numeric($value)) {
             return $value;
         }
@@ -413,47 +489,215 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
 
     private function parseDate($value)
     {
-        if (empty($value)) {
+        if (empty($value) || $value === '0000-00-00' || $value === '0000-00-00 00:00:00') {
             return null;
         }
 
         try {
-            if (is_numeric($value) && strlen((string)(int)$value) === 8) {
-                // Handle YYYYMMDD format
-                $date = \DateTime::createFromFormat('Ymd', (string)(int)$value);
-                return $date ? $date->format('Y-m-d') : null;
+            // If it's already a valid date string in Y-m-d format
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                return $value;
+            }
+
+            // Handle Excel timestamp (days since 1900-01-01)
+            if (is_numeric($value) && $value > 0) {
+                try {
+                    // First try PhpSpreadsheet's date conversion if available
+                    if (class_exists('\PhpOffice\PhpSpreadsheet\Shared\Date')) {
+                        $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
+                        if ($date) {
+                            return $date->format('Y-m-d');
+                        }
+                    }
+                    
+                    // Fallback: Manual conversion for Excel serial dates
+                    // Excel's epoch is 1900-01-01, but it incorrectly considers 1900 as a leap year
+                    $utcDays = (int)$value;
+                    $timestamp = ($utcDays - 25569) * 86400; // 25569 = days between 1970-01-01 and 1900-01-01
+                    $date = new \DateTime('@' . $timestamp);
+                    return $date->format('Y-m-d');
+                } catch (\Exception $e) {
+                    \Log::warning('Excel date conversion error', [
+                        'value' => $value,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Handle YYYYMMDD format (as number or string)
+            if (is_numeric($value) || ctype_digit($value)) {
+                $value = (string)$value;
+                if (strlen($value) === 8) {
+                    $date = \DateTime::createFromFormat('Ymd', $value);
+                    if ($date && $date->format('Ymd') === $value) {
+                        return $date->format('Y-m-d');
+                    }
+                }
             }
 
             if (is_string($value)) {
+                // Clean up the date string
+                $value = trim($value);
+                
                 // Try to parse various date formats
                 $formats = [
-                    'Y-m-d',
-                    'd/m/Y',
-                    'm/d/Y',
-                    'Y/m/d',
-                    'd-m-Y',
-                    'm-d-Y',
-                    'Y.m.d',
-                    'd.m.Y',
-                    'm.d.Y',
+                    'Y-m-d', 'd/m/Y', 'm/d/Y', 'Y/m/d',
+                    'd-m-Y', 'm-d-Y', 'Y.m.d', 'd.m.Y', 'm.d.Y',
+                    'd M Y', 'j M Y', 'd F Y', 'j F Y', // 01 Jan 2023, 1 Jan 2023
+                    'M d, Y', 'F d, Y', // Jan 01, 2023, January 01, 2023
                 ];
 
                 foreach ($formats as $format) {
                     $date = \DateTime::createFromFormat($format, $value);
-                    if ($date) {
+                    if ($date && $date->format($format) === $value) {
                         return $date->format('Y-m-d');
                     }
                 }
 
-                // Try strtotime as a fallback
+                // Try strtotime as a fallback with more strict checking
                 if (($timestamp = strtotime($value)) !== false) {
-                    return date('Y-m-d', $timestamp);
+                    $parsedDate = date('Y-m-d', $timestamp);
+                    // Additional validation to prevent wrong date parsing
+                    $checkDate = \DateTime::createFromFormat('Y-m-d', $parsedDate);
+                    if ($checkDate && $checkDate->format('Y-m-d') === $parsedDate) {
+                        return $parsedDate;
+                    }
                 }
             }
         } catch (\Exception $e) {
-            // If any error occurs during date parsing, return null
+            \Log::warning('Date parsing error', [
+                'value' => $value,
+                'error' => $e->getMessage()
+            ]);
         }
 
         return null;
+    }
+
+    private function parseGender($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        $value = strtolower(trim($value));
+        
+        // Handle common gender representations
+        $malePatterns = ['male', 'm', 'man', 'boy', '남', '남성', '남자'];
+        $femalePatterns = ['female', 'f', 'woman', 'girl', '여', '여성', '여자'];
+        $otherPatterns = ['other', 'o', 'non-binary', 'nonbinary', 'nb', 'x', 'prefer not to say', '기타', 'etc'];
+        
+        if (in_array($value, $malePatterns)) {
+            return 'male';
+        }
+        
+        if (in_array($value, $femalePatterns)) {
+            return 'female';
+        }
+        
+        if (in_array($value, $otherPatterns)) {
+            return 'other';
+        }
+        
+        // Handle numeric values that might come from Excel (1 = male, 2 = female, etc.)
+        if (is_numeric($value)) {
+            $value = (int)$value;
+            if ($value === 1) return 'male';
+            if ($value === 2) return 'female';
+            return 'other';
+        }
+        
+        // Default to null if not recognized
+        return null;
+    }
+    
+    /**
+     * Clean and validate an email address
+     * 
+     * @param string|null $email
+     * @return string|null
+     */
+    private function cleanEmail($email)
+    {
+        if (empty($email) || !is_string($email)) {
+            return null;
+        }
+        
+        // Trim and convert to lowercase
+        $email = strtolower(trim($email));
+        
+        // Remove any surrounding whitespace, quotes, or angle brackets
+        $email = trim($email, " \t\n\r\0\x0B<>\"'`");
+        
+        // Simple email validation using filter_var
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return null;
+        }
+        
+        // Additional validation for common email patterns
+        if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $email)) {
+            return null;
+        }
+        
+        // Check for common disposable email domains
+        $disposableDomains = [
+            'tempmail', 'mailinator', 'guerrillamail', '10minutemail', 'yopmail', 'throwawaymail',
+            'dispostable', 'maildrop', 'getnada', 'temp-mail', 'tempmailaddress', 'fakeinbox',
+            'mailnesia', 'getairmail', 'mailcatch', 'tempr', 'tempmailer', 'temporarymail', 'tmpmail'
+        ];
+        
+        $domain = substr(strrchr($email, "@"), 1);
+        
+        foreach ($disposableDomains as $disposable) {
+            if (strpos($domain, $disposable) !== false) {
+                return null;
+            }
+        }
+        
+        return $email;
+    }
+    
+    /**
+     * Parse various boolean representations into a boolean value
+     * 
+     * @param mixed $value
+     * @return bool
+     */
+    private function parseBoolean($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        
+        if (is_numeric($value)) {
+            return (int)$value !== 0;
+        }
+        
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            
+            $trueValues = ['true', 'yes', 'y', '1', 'active', 'enabled', 'on', 't'];
+            $falseValues = ['false', 'no', 'n', '0', 'inactive', 'disabled', 'off', 'f', ''];
+            
+            if (in_array($value, $trueValues, true)) {
+                return true;
+            }
+            
+            if (in_array($value, $falseValues, true)) {
+                return false;
+            }
+            
+            // For Korean language support
+            if (in_array($value, ['예', '네', '활성', '사용', '켜짐'], true)) {
+                return true;
+            }
+            
+            if (in_array($value, ['아니오', '비활성', '사용안함', '꺼짐'], true)) {
+                return false;
+            }
+        }
+        
+        // Default to true for any other non-empty value
+        return !empty($value);
     }
 }
