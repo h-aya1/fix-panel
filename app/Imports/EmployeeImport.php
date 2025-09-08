@@ -10,14 +10,13 @@ use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\PrepareForValidation;
 use Maatwebsite\Excel\Validators\Failure;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithValidation, SkipsOnError, PrepareForValidation
+class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading, WithValidation, SkipsOnError
 {
     use SkipsErrors;
 
@@ -82,10 +81,33 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
         \Log::debug('Processing row', ['row' => $this->rowCount, 'data' => $row]);
         
         try {
-            // Row data has already been validated and mapped in prepareForValidation
-            $mappedRow = $row;
+            // Convert all row keys to lowercase for case-insensitive matching
+            $row = array_change_key_case($row, CASE_LOWER);
             
-            // Skip rows without a name (should not happen due to validation, but safety check)
+            // Map headers to standard field names
+            $mappedRow = [];
+            foreach ($this->headers as $standardField => $possibleHeaders) {
+                foreach ($possibleHeaders as $header) {
+                    $header = strtolower(trim($header));
+                    if (isset($row[$header]) && !empty($row[$header])) {
+                        $mappedRow[$standardField] = $row[$header];
+                        break;
+                    }
+                }
+            }
+            
+            // If no name is found, try to find it using common name fields
+            if (empty($mappedRow['name'])) {
+                $nameFields = ['employee name', 'name', 'full name', 'employee_name', 'full_name'];
+                foreach ($nameFields as $field) {
+                    if (!empty($row[$field])) {
+                        $mappedRow['name'] = $row[$field];
+                        break;
+                    }
+                }
+            }
+            
+            // Skip rows without a name
             if (empty($mappedRow['name'])) {
                 $errorMsg = 'Employee name is required';
                 $this->importErrors[] = [
@@ -100,7 +122,7 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
             // Clean and format data
             $employeeData = [
                 'uid' => (string) Str::uuid(),
-                'employee_id' => $mappedRow['employee_id'] ?? null,
+                'employee_id' => $this->cleanValue($mappedRow['employee_id'] ?? null, true),
                 'work_location' => $this->cleanValue($mappedRow['work_location'] ?? null),
                 'position' => $this->cleanValue($mappedRow['position'] ?? 'Employee'),
                 'name' => $this->cleanValue($mappedRow['name'] ?? null),
@@ -248,79 +270,54 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
         }
     }
 
-    public function prepareForValidation($data, $index)
-    {
-        // Convert all row keys to lowercase for case-insensitive matching
-        $data = array_change_key_case($data, CASE_LOWER);
-        
-        // Map headers to standard field names and prepare data for validation
-        $mappedRow = [];
-        foreach ($this->headers as $standardField => $possibleHeaders) {
-            foreach ($possibleHeaders as $header) {
-                $header = strtolower(trim($header));
-                if (isset($data[$header]) && !empty($data[$header])) {
-                    $mappedRow[$standardField] = $data[$header];
-                    break;
-                }
-            }
-        }
-        
-        // If no name is found, try to find it using common name fields
-        if (empty($mappedRow['name'])) {
-            $nameFields = ['employee name', 'name', 'full name', 'employee_name', 'full_name'];
-            foreach ($nameFields as $field) {
-                if (!empty($data[$field])) {
-                    $mappedRow['name'] = $data[$field];
-                    break;
-                }
-            }
-        }
-        
-        // Convert employee_id to string if it exists
-        if (isset($mappedRow['employee_id'])) {
-            $mappedRow['employee_id'] = $this->cleanValue($mappedRow['employee_id'], true);
-        }
-        
-        // Handle date of joining
-        if (isset($mappedRow['join_date'])) {
-            $mappedRow['date_of_joining'] = $mappedRow['join_date'];
-        }
-        
-        // Also check for additional fields that might be in the raw data
-        $additionalFields = ['gender', 'sex', 'email', 'address', 'residence', 'city', 'state', 'province', 
-                            'postal_code', 'zip', 'country', 'emergency_contact', 'emergency_contact_name', 
-                            'emergency_contact_number', 'emergency_phone'];
-        
-        foreach ($additionalFields as $field) {
-            if (isset($data[$field]) && !empty($data[$field])) {
-                $mappedRow[$field] = $data[$field];
-            }
-        }
-        
-        return $mappedRow;
-    }
 
     public function rules(): array
     {
         return [
-            'employee_id' => 'nullable|string|max:100',
-            'name' => 'required|string|max:255',
-            'contact_number' => 'nullable|string|max:20',
-            'date_of_joining' => [
+            // Use wildcard validation for any possible column names
+            '*.employee_id' => [
                 'nullable',
                 function ($attribute, $value, $fail) {
                     if ($value !== null && $value !== '') {
-                        // Skip validation if it's already a valid date string
-                        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-                            return;
+                        $stringValue = $this->cleanValue($value, true);
+                        if (strlen($stringValue) > 100) {
+                            $fail('The employee_id field must not exceed 100 characters.');
                         }
-                        
-                        // Skip validation for Excel serial dates (numeric values)
-                        if (is_numeric($value) && $value > 0) {
-                            return;
-                        }
-                        
-                        // Try to parse the date
+                    }
+                }
+            ],
+            '*.name' => [
+                function ($attribute, $value, $fail) {
+                    if (empty($value) || trim($value) === '') {
+                        $fail('Employee name is required.');
+                    }
+                }
+            ],
+            '*.employee name' => [
+                function ($attribute, $value, $fail) {
+                    if (empty($value) || trim($value) === '') {
+                        $fail('Employee name is required.');
+                    }
+                }
+            ],
+            '*.full name' => [
+                function ($attribute, $value, $fail) {
+                    if (empty($value) || trim($value) === '') {
+                        $fail('Employee name is required.');
+                    }
+                }
+            ],
+            '*.employee_name' => [
+                function ($attribute, $value, $fail) {
+                    if (empty($value) || trim($value) === '') {
+                        $fail('Employee name is required.');
+                    }
+                }
+            ],
+            '*.date of joining' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && $value !== '') {
                         $parsedDate = $this->parseDate($value);
                         if ($parsedDate === null) {
                             $fail('Invalid date format for joining date. Use YYYY-MM-DD format');
@@ -328,28 +325,62 @@ class EmployeeImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
                     }
                 }
             ],
-            'base_salary' => 'nullable|numeric|min:0',
-            'work_days' => 'nullable|integer|min:0|max:31',
-            'age' => 'nullable|integer|min:16|max:100',
+            '*.join date' => [
+                'nullable', 
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && $value !== '') {
+                        $parsedDate = $this->parseDate($value);
+                        if ($parsedDate === null) {
+                            $fail('Invalid date format for joining date. Use YYYY-MM-DD format');
+                        }
+                    }
+                }
+            ],
+            '*.joining date' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && $value !== '') {
+                        $parsedDate = $this->parseDate($value);
+                        if ($parsedDate === null) {
+                            $fail('Invalid date format for joining date. Use YYYY-MM-DD format');
+                        }
+                    }
+                }
+            ],
+            '*.base salary' => 'nullable|numeric|min:0',
+            '*.basic salary' => 'nullable|numeric|min:0',
+            '*.salary' => 'nullable|numeric|min:0',
+            '*.work days' => 'nullable|integer|min:0|max:31',
+            '*.working days' => 'nullable|integer|min:0|max:31',
+            '*.age' => 'nullable|integer|min:16|max:100',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            'employee_id.string' => 'The employee_id field must be a string.',
-            'employee_id.max' => 'The employee_id field must not exceed 100 characters.',
-            'name.required' => 'Employee name is required',
-            'name.string' => 'Employee name must be a string',
-            'name.max' => 'Employee name must not exceed 255 characters',
-            'date_of_joining.date' => 'Invalid date format for joining date. Use YYYY-MM-DD format',
-            'base_salary.numeric' => 'Base salary must be a number',
-            'base_salary.min' => 'Base salary cannot be negative',
-            'work_days.integer' => 'Work days must be a whole number',
-            'work_days.min' => 'Work days cannot be negative',
-            'work_days.max' => 'Work days cannot be more than 31',
-            'age.min' => 'Employee must be at least 16 years old',
-            'age.max' => 'Employee age cannot be more than 100',
+            '*.employee_id' => 'The employee_id field must be a string and not exceed 100 characters.',
+            '*.name' => 'Employee name is required',
+            '*.employee name' => 'Employee name is required',
+            '*.full name' => 'Employee name is required', 
+            '*.employee_name' => 'Employee name is required',
+            '*.date of joining' => 'Invalid date format for joining date. Use YYYY-MM-DD format',
+            '*.join date' => 'Invalid date format for joining date. Use YYYY-MM-DD format',
+            '*.joining date' => 'Invalid date format for joining date. Use YYYY-MM-DD format',
+            '*.base salary.numeric' => 'Base salary must be a number',
+            '*.base salary.min' => 'Base salary cannot be negative',
+            '*.basic salary.numeric' => 'Basic salary must be a number',
+            '*.basic salary.min' => 'Basic salary cannot be negative',
+            '*.salary.numeric' => 'Salary must be a number',
+            '*.salary.min' => 'Salary cannot be negative',
+            '*.work days.integer' => 'Work days must be a whole number',
+            '*.work days.min' => 'Work days cannot be negative',
+            '*.work days.max' => 'Work days cannot be more than 31',
+            '*.working days.integer' => 'Working days must be a whole number',
+            '*.working days.min' => 'Working days cannot be negative',
+            '*.working days.max' => 'Working days cannot be more than 31',
+            '*.age.min' => 'Employee must be at least 16 years old',
+            '*.age.max' => 'Employee age cannot be more than 100',
         ];
     }
 
